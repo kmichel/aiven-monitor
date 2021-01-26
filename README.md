@@ -1,6 +1,9 @@
 # Aiven Monitor
 Monitor website status and send to Kafka.
 
+  - [API Reference](https://kmichel.github.io/aiven-monitor/)
+  - [Coverage](https://kmichel.github.io/aiven-monitor/coverage/)
+
 # Dev Setup
 ```shell script
 python3 -m venv venv
