@@ -3,7 +3,8 @@ aiven-monitor documentation
 
 Monitor website status and send to Kafka.
 
-`Coverage <./coverage/>`__
+- `Github Repository <https://github.com/kmichel/aiven-monitor/>`__
+- `Coverage <./coverage/>`__
 
 .. toctree::
     :caption: API Reference
