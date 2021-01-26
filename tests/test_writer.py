@@ -1,13 +1,21 @@
+import configparser
 import datetime
 import json
+import tempfile
 import uuid
+from pathlib import Path
 from unittest import mock
 
 import kafka.errors
 import psycopg2
 import trio
 from aiven_monitor import Measure
-from aiven_monitor.writer import KafkaSource, PostgresRecorder
+from aiven_monitor.writer import (
+    KafkaSource,
+    PostgresRecorder,
+    create_kafka_source,
+    create_postgres_recorder,
+)
 
 
 def test_create_kafka_source():
@@ -19,6 +27,45 @@ def test_create_kafka_source():
     assert kafka_source.ssl_cafile == '/tmp/cafile'
     assert kafka_source.ssl_certfile == '/tmp/certfile'
     assert kafka_source.ssl_keyfile == '/tmp/keyfile'
+
+
+def test_create_kafka_source_from_config():
+    config = configparser.ConfigParser()
+    config.read_dict(
+        {
+            'test': {
+                'kafka.bootstrap_servers': 'localhost',
+                'kafka.topic': 'topic',
+                'kafka.ssl.cafile': 'relative/cafile',
+                'kafka.ssl.certfile': '/absolute/certfile',
+                'kafka.ssl.keyfile': '../bare_keyfile',
+            }
+        }
+    )
+    kafka_source = create_kafka_source(Path('/foo/bar'), config['test'])
+    assert kafka_source.bootstrap_servers == 'localhost'
+    assert kafka_source.topic == 'topic'
+    assert kafka_source.ssl_cafile == Path('/foo/bar/relative/cafile')
+    assert kafka_source.ssl_certfile == Path('/absolute/certfile')
+    assert kafka_source.ssl_keyfile == Path('/foo/bar/../bare_keyfile')
+
+
+def test_create_kafka_source_from_partial_config():
+    config = configparser.ConfigParser()
+    config.read_dict(
+        {
+            'test': {
+                'kafka.bootstrap_servers': 'localhost',
+                'kafka.topic': 'topic',
+            }
+        }
+    )
+    kafka_source = create_kafka_source(Path('/foo/bar'), config['test'])
+    assert kafka_source.bootstrap_servers == 'localhost'
+    assert kafka_source.topic == 'topic'
+    assert kafka_source.ssl_cafile is None
+    assert kafka_source.ssl_certfile is None
+    assert kafka_source.ssl_keyfile is None
 
 
 async def test_kafka_source_start_creates_consumer():
@@ -104,6 +151,57 @@ def test_create_postgres_recorder():
     assert postgres_recorder.ssl_rootcertfile == '/tmp/rootcert'
 
 
+def test_create_postgres_recorder_from_config():
+    with tempfile.NamedTemporaryFile() as password_file:
+        password_file.write(b'hello\n')
+        password_file.flush()
+        config = configparser.ConfigParser()
+        config.read_dict(
+            {
+                'test': {
+                    'postgres.measure_table': 'measure_table',
+                    'postgres.host': 'host',
+                    'postgres.port': 1234,
+                    'postgres.user': 'admin',
+                    'postgres.passwordfile': password_file.name,
+                    'postgres.database': 'defaultdb',
+                    'postgres.ssl.rootcertfile': 'certfile',
+                }
+            }
+        )
+        postgres_recorder = create_postgres_recorder(
+            Path('/foo/bar'), config['test']
+        )
+        assert postgres_recorder.measure_table == 'measure_table'
+        assert postgres_recorder.host == 'host'
+        assert postgres_recorder.port == 1234
+        assert postgres_recorder.user == 'admin'
+        assert postgres_recorder.password == 'hello'
+        assert postgres_recorder.database == 'defaultdb'
+        assert postgres_recorder.ssl_rootcertfile == Path('/foo/bar/certfile')
+
+
+def test_create_postgres_recorder_from_partial_config():
+    config = configparser.ConfigParser()
+    config.read_dict(
+        {
+            'test': {
+                'postgres.measure_table': 'measure_table',
+            }
+        }
+    )
+    postgres_recorder = create_postgres_recorder(
+        Path('/foo/bar'), config['test']
+    )
+    assert postgres_recorder.measure_table == 'measure_table'
+    assert postgres_recorder.host is None
+    assert postgres_recorder.port is None
+    assert postgres_recorder.user is None
+    assert postgres_recorder.password is None
+    assert postgres_recorder.database is None
+    assert postgres_recorder.ssl_rootcertfile is None
+
+
 async def test_postgres_recorder_start_creates_cursor(autojump_clock):
     # That's very basic, more in-depth tests are done with a real database
     postgres_recorder = PostgresRecorder(
@@ -137,8 +235,6 @@ async def test_postgres_recorder_start_creates_cursor(autojump_clock):
             dbname='database',
         )
         assert postgres_recorder.cursor == cursor
-        # The 'start' coroutine isn't meant to stop in normal usage, force it
-        nursery.cancel_scope.cancel()
 
 
 async def test_postgres_recorder_start_retries_on_error(autojump_clock):
@@ -186,8 +282,6 @@ async def test_postgres_recorder_start_creates_table(autojump_clock):
                 async with postgres_recorder.has_cursor:
                     await postgres_recorder.has_cursor.wait()
         postgres_recorder.create_measure_table.assert_called_once()
-        # The 'start' coroutine isn't meant to stop in normal usage, force it
-        nursery.cancel_scope.cancel()
 
 
 async def test_postgres_recorder_record_inserts_measure(autojump_clock):
@@ -305,6 +399,4 @@ async def test_postgres_recorder_record_retries_on_error(autojump_clock):
     async with trio.open_nursery() as nursery:
         nursery.start_soon(postgres_recorder.start)
         await postgres_recorder.record(measure)
-        # The 'start' coroutine isn't meant to stop in normal usage, force it
-        nursery.cancel_scope.cancel()
     assert postgres_recorder.add_measure.call_count == 5

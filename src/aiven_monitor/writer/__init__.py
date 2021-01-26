@@ -1,11 +1,12 @@
 from __future__ import annotations
 
-import configparser
 import datetime
 import json
 import logging
 import os
-from typing import Optional
+from configparser import ConfigParser, SectionProxy
+from pathlib import Path
+from typing import Optional, Union
 from uuid import UUID
 
 import kafka
@@ -15,7 +16,7 @@ import psycopg2.extras
 import trio
 from psycopg2 import sql
 
-from .. import Measure
+from .. import Measure, resolve_path
 
 logger = logging.getLogger('aiven-monitor-writer')
 
@@ -33,53 +34,70 @@ def main():
     Configures the logging at :attr:`loging.INFO` level and starts the
     :func:`async_main` function using `trio`.
 
-    The config is read from the **AIVEN_MONITOR_CHECKER_CONFIG_PATH**
-    environment variable, with a default value of '/run/secrets/writer.ini'.
+    The configuration path is read from the
+    **AIVEN_MONITOR_WRITER_CONFIG_PATH** environment variable, with a default
+    value of '/run/secrets/writer.ini'.
     """
     logging.basicConfig(level=logging.INFO)
-    psycopg2.extras.register_uuid()
-
-    config = configparser.ConfigParser()
-    config.read_dict({'writer': DEFAULT_CONFIG})
-    config_path = os.environ.get(
-        'AIVEN_MONITOR_WRITER_CONFIG_PATH', '/run/secrets/writer.ini'
+    config_path = Path(
+        os.environ.get(
+            'AIVEN_MONITOR_WRITER_CONFIG_PATH', '/run/secrets/writer.ini'
+        )
     )
+    config = load_writer_config(config_path)
+    trio.run(async_main, config_path.parent, config)
+
+
+def load_writer_config(config_path: Union[str, Path]) -> SectionProxy:
+    config = ConfigParser()
+    config.read_dict({'writer': DEFAULT_CONFIG})
     config.read(config_path)
-    trio.run(async_main, config)
+    return config['writer']
 
 
-async def async_main(config: configparser.ConfigParser):
-    """
-    Runs a :class:`KafkaSource` and a :class:`PostgresRecorder` together.
-
-    :param config: The configuration for the :class:`KafkaSource` and the
-     :class:`PostgresRecorder`.
-    """
-    config = config['writer']
-    source = KafkaSource(
+def create_kafka_source(base_path: Path, config: SectionProxy) -> KafkaSource:
+    return KafkaSource(
         config['kafka.bootstrap_servers'],
         config['kafka.topic'],
-        config.get('kafka.ssl.cafile'),
-        config.get('kafka.ssl.certfile'),
-        config.get('kafka.ssl.keyfile'),
+        resolve_path(base_path, config.get('kafka.ssl.cafile')),
+        resolve_path(base_path, config.get('kafka.ssl.certfile')),
+        resolve_path(base_path, config.get('kafka.ssl.keyfile')),
         config.getfloat('kafka.connect_interval_secs'),
     )
-    password_file = config.get('postgres.passwordfile')
+
+
+def create_postgres_recorder(
+        base_path: Path, config: SectionProxy
+) -> PostgresRecorder:
+    password_file = resolve_path(base_path, config.get('postgres.passwordfile'))
     if password_file is not None:
         with open(password_file) as password_file:
             postgres_password = password_file.read().rstrip('\n')
     else:
         postgres_password = None
-    recorder = PostgresRecorder(
+    return PostgresRecorder(
         config['postgres.measure_table'],
         config.get('postgres.host'),
         config.getint('postgres.port'),
         config.get('postgres.user'),
         postgres_password,
         config.get('postgres.database'),
-        config.get('postgres.ssl.rootcertfile'),
+        resolve_path(base_path, config.get('postgres.ssl.rootcertfile')),
         config.getfloat('postgres.connect_interval_secs'),
     )
+
+
+async def async_main(base_path: Path, config: SectionProxy):
+    """
+    Runs a :class:`KafkaSource` and a :class:`PostgresRecorder` together.
+
+    :param base_path: The reference path used to resolve relative paths
+     in the configuration.
+    :param config: The configuration for the :class:`KafkaSource` and the
+     :class:`PostgresRecorder`.
+    """
+    source = create_kafka_source(base_path, config)
+    recorder = create_postgres_recorder(base_path, config)
     async with trio.open_nursery() as nursery:
         # We're only doing async here to handle (re)connections easily,
         # the message polling and recording itself is still sync so don't
@@ -118,9 +136,9 @@ class KafkaSource:
             self,
             bootstrap_servers: str,
             topic: str,
-            ssl_cafile: Optional[str],
-            ssl_certfile: Optional[str],
-            ssl_keyfile: Optional[str],
+            ssl_cafile: Optional[Union[str, Path]],
+            ssl_certfile: Optional[Union[str, Path]],
+            ssl_keyfile: Optional[Union[str, Path]],
             connect_interval_secs: float = 1.0,
     ):
         self.bootstrap_servers = bootstrap_servers
@@ -193,7 +211,11 @@ class PostgresRecorder:
      connect.
     """
 
-    _connection_factory = staticmethod(psycopg2.connect)
+    @staticmethod
+    def _connection_factory(*args, **kwargs):
+        connection = psycopg2.connect(*args, **kwargs)
+        psycopg2.extras.register_uuid(conn_or_curs=connection)
+        return connection
 
     def __init__(
             self,
@@ -203,7 +225,7 @@ class PostgresRecorder:
             user: Optional[str],
             password: Optional[str],
             database: Optional[str],
-            ssl_rootcertfile: Optional[str],
+            ssl_rootcertfile: Optional[Union[str, Path]],
             connect_interval_secs: float = 1.0,
     ):
         self.measure_table = measure_table
@@ -214,10 +236,8 @@ class PostgresRecorder:
         self.database = database
         self.ssl_rootcertfile = ssl_rootcertfile
         self.connect_interval_secs = connect_interval_secs
-        self.connection = None
         self.cursor = None
         self.has_cursor = trio.Condition()
-        self.needs_cursor = trio.Condition()
 
     async def start(self) -> None:
         """
@@ -226,7 +246,7 @@ class PostgresRecorder:
         If the connection is lost or cannot be established, it will endlessly
         retry while waiting `connect_interval_secs`  between each attempt.
         """
-        while True:
+        while self.cursor is None:
             try:
                 logger.info(
                     'postgres-connect: host=%s, user=%s, database=%s',
@@ -234,26 +254,33 @@ class PostgresRecorder:
                     self.user,
                     self.database,
                 )
-                self.connection = self._connection_factory(
-                    sslmode='verify-full',
-                    sslrootcert=self.ssl_rootcertfile,
-                    host=self.host,
-                    port=self.port,
-                    user=self.user,
-                    password=self.password,
-                    dbname=self.database,
-                )
-                self.cursor = self.connection.cursor()
-                self.create_measure_table()
+                self.cursor = self.create_cursor()
+                self.create_measure_table(self.cursor)
                 logger.info('postgres-ready')
                 async with self.has_cursor:
                     self.has_cursor.notify_all()
-                async with self.needs_cursor:
-                    while self.cursor is not None and not self.cursor.closed:
-                        await self.needs_cursor.wait()
             except psycopg2.OperationalError:
                 logger.exception('postgres-error')
                 await trio.sleep(self.connect_interval_secs)
+
+    def create_cursor(self):
+        connection = self._connection_factory(
+            sslmode='verify-full',
+            sslrootcert=self.ssl_rootcertfile,
+            host=self.host,
+            port=self.port,
+            user=self.user,
+            password=self.password,
+            dbname=self.database,
+        )
+        cursor = connection.cursor()
+        cursor.execute('set statement_timeout=5000')
+        return cursor
+
+    async def wait_for_cursor(self):
+        async with self.has_cursor:
+            while self.cursor is None:
+                await self.has_cursor.wait()
 
     async def record(self, measure: Measure) -> None:
         """
@@ -271,11 +298,7 @@ class PostgresRecorder:
         """
         while True:
             try:
-                async with self.has_cursor:
-                    while self.cursor is None or self.cursor.closed:
-                        async with self.needs_cursor:
-                            self.needs_cursor.notify_all()
-                        await self.has_cursor.wait()
+                await self.wait_for_cursor()
                 logger.info('measure-record: %s', measure.to_dict())
                 self.add_measure(
                     measure.measure_id,
@@ -294,11 +317,12 @@ class PostgresRecorder:
                 logger.exception('postgres-error')
                 await trio.sleep(self.connect_interval_secs)
                 self.cursor = None
+                await self.start()
             else:
                 return
 
-    def create_measure_table(self):
-        self.cursor.execute(
+    def create_measure_table(self, cursor):
+        cursor.execute(
             sql.SQL(
                 '''
                 create table if not exists {measure_table} (
@@ -318,7 +342,7 @@ class PostgresRecorder:
             ).format(measure_table=sql.Identifier(self.measure_table))
         )
         measure_index = f'{self.measure_table}_url_start_time'
-        self.cursor.execute(
+        cursor.execute(
             sql.SQL(
                 '''
                 create index if not exists {measure_index} on {measure_table}

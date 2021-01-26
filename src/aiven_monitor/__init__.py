@@ -1,4 +1,5 @@
 import datetime
+from pathlib import Path
 from typing import Dict, Optional, Union
 from uuid import UUID
 
@@ -103,3 +104,8 @@ class Measure:
             'pattern_was_found': self.pattern_was_found,
             'checker_version': self.checker_version,
         }
+
+
+def resolve_path(head: Path, optional_tail: Optional[str]):
+    if optional_tail is not None:
+        return head.joinpath(optional_tail)
