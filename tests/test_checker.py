@@ -1,7 +1,9 @@
+import configparser
 import datetime
 import re
 import statistics
 import uuid
+from pathlib import Path
 from unittest import mock
 
 import kafka.errors
@@ -15,6 +17,7 @@ from aiven_monitor.checker import (
     RESPONSE_MAX_BYTES,
     Schedule,
     Scheduler,
+    create_kafka_recorder,
 )
 
 
@@ -382,6 +385,45 @@ def test_create_kafka_recorder():
     assert kafka_recorder.ssl_cafile == '/tmp/cafile'
     assert kafka_recorder.ssl_certfile == '/tmp/certfile'
     assert kafka_recorder.ssl_keyfile == '/tmp/keyfile'
+
+
+def test_create_kafka_recorder_from_config():
+    config = configparser.ConfigParser()
+    config.read_dict(
+        {
+            'test': {
+                'kafka.bootstrap_servers': 'localhost',
+                'kafka.topic': 'topic',
+                'kafka.ssl.cafile': 'relative/cafile',
+                'kafka.ssl.certfile': '/absolute/certfile',
+                'kafka.ssl.keyfile': '../bare_keyfile',
+            }
+        }
+    )
+    kafka_recorder = create_kafka_recorder(Path('/foo/bar'), config['test'])
+    assert kafka_recorder.bootstrap_servers == 'localhost'
+    assert kafka_recorder.topic == 'topic'
+    assert kafka_recorder.ssl_cafile == Path('/foo/bar/relative/cafile')
+    assert kafka_recorder.ssl_certfile == Path('/absolute/certfile')
+    assert kafka_recorder.ssl_keyfile == Path('/foo/bar/../bare_keyfile')
+
+
+def test_create_kafka_recorder_from_partial_config():
+    config = configparser.ConfigParser()
+    config.read_dict(
+        {
+            'test': {
+                'kafka.bootstrap_servers': 'localhost',
+                'kafka.topic': 'topic',
+            }
+        }
+    )
+    kafka_recorder = create_kafka_recorder(Path('/foo/bar'), config['test'])
+    assert kafka_recorder.bootstrap_servers == 'localhost'
+    assert kafka_recorder.topic == 'topic'
+    assert kafka_recorder.ssl_cafile is None
+    assert kafka_recorder.ssl_certfile is None
+    assert kafka_recorder.ssl_keyfile is None
 
 
 async def test_kafka_recorder_start_creates_producer():

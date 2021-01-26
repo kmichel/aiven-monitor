@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import configparser
 import datetime
 import heapq
 import json
@@ -8,7 +7,9 @@ import logging
 import os
 import random
 import re
-from typing import Iterable, Optional
+from configparser import ConfigParser, SectionProxy
+from pathlib import Path
+from typing import Iterable, Optional, Union
 from uuid import uuid4
 
 import httpx
@@ -17,7 +18,7 @@ import kafka.errors
 import trio
 from httpx._decoders import TextDecoder
 
-from .. import Measure, VERSION
+from .. import Measure, VERSION, resolve_path
 
 USER_AGENT = f'aiven-monitor/${VERSION}'
 REQUEST_TIMEOUT_SECS = 60.0
@@ -34,37 +35,52 @@ logger = logging.getLogger('aiven-monitor-checker')
 
 def main():
     """
-    Configures the logging at :attr:`loging.INFO` level and starts the
+    Configures the logging at :attr:`logging.INFO` level and starts the
     :func:`async_main` function using `trio`.
 
-    The config is read from the **AIVEN_MONITOR_WRITER_CONFIG_PATH**
-    environment variable, with a default value of '/run/secrets/checker.ini'.
+    The configuration path is read from the
+    **AIVEN_MONITOR_CHECKER_CONFIG_PATH** environment variable, with a default
+    value of '/run/secrets/checker.ini'.
     """
     logging.basicConfig(level=logging.INFO)
-    config = configparser.ConfigParser()
-    config.read_dict({'writer': DEFAULT_CONFIG})
-    config_path = os.environ.get(
-        'AIVEN_MONITOR_CHECKER_CONFIG_PATH', '/run/secrets/checker.ini'
+    config_path = Path(
+        os.environ.get(
+            'AIVEN_MONITOR_CHECKER_CONFIG_PATH', '/run/secrets/checker.ini'
+        )
     )
+    config = load_checker_config(config_path)
+    trio.run(async_main, config_path.parent, config)
+
+
+def load_checker_config(config_path: Union[str, Path]) -> SectionProxy:
+    config = ConfigParser()
+    config.read_dict({'checker': DEFAULT_CONFIG})
     config.read(config_path)
-    trio.run(async_main, config)
+    return config['checker']
 
 
-async def async_main(config: configparser.ConfigParser):
+def create_kafka_recorder(
+        base_path: Path, config: SectionProxy
+) -> KafkaRecorder:
+    return KafkaRecorder(
+        config['kafka.bootstrap_servers'],
+        config['kafka.topic'],
+        resolve_path(base_path, config.get('kafka.ssl.cafile')),
+        resolve_path(base_path, config.get('kafka.ssl.certfile')),
+        resolve_path(base_path, config.get('kafka.ssl.keyfile')),
+    )
+
+
+async def async_main(base_path: Path, config: SectionProxy):
     """
     Starts a :class:`Scheduler` and a :class:`KafkaRecorder` together.
 
+    :param base_path: The reference path used to resolve relative paths
+     in the configuration.
     :param config: The configuration for the :class:`KafkaRecorder`.
     """
     scheduler = Scheduler()
-    config = config['checker']
-    recorder = KafkaRecorder(
-        config['kafka.bootstrap_servers'],
-        config['kafka.topic'],
-        config.get('kafka.ssl.cafile'),
-        config.get('kafka.ssl.certfile'),
-        config.get('kafka.ssl.keyfile'),
-    )
+    recorder = create_kafka_recorder(base_path, config)
     async with trio.open_nursery() as nursery:
         try:
             # TODO: what should be the source of the 'config' ?
@@ -165,16 +181,13 @@ class Probe:
                         # Make sure trio has the opportunity to check timeouts
                         await trio.sleep(0)
                         # We only record the content if we need it
-                        if (
-                                self.expected_pattern is not None
-                                and response_size_bytes < RESPONSE_MAX_BYTES
-                        ):
+                        allowed_bytes = RESPONSE_MAX_BYTES - response_size_bytes
+                        expects_pattern = self.expected_pattern is not None
+                        if expects_pattern and allowed_bytes > 0:
                             # Make sure we stop at RESPONSE_MAX_BYTES without
                             # being affected by the exact size of each chunk.
                             # Beware, we wil cut a multi-byte character in half.
-                            chunk = chunk[
-                                    : RESPONSE_MAX_BYTES - response_size_bytes
-                                    ]
+                            chunk = chunk[:allowed_bytes]
                             chunks.append(chunk)
                         response_size_bytes += len(chunk)
                         if response_size_bytes >= RESPONSE_MAX_BYTES:
@@ -203,12 +216,9 @@ class Probe:
                             # TODO: Put that in the measure instead
                             logger.error('response-error: %s', str(value_error))
                         else:
-                            measure.pattern_was_found = (
-                                    self.expected_pattern.search(
-                                        ''.join(text_chunks)
-                                    )
-                                    is not None
-                            )
+                            content = ''.join(text_chunks)
+                            match = self.expected_pattern.search(content)
+                            measure.pattern_was_found = match is not None
             await recorder.record(measure)
 
 
@@ -370,9 +380,9 @@ class KafkaRecorder:
             self,
             bootstrap_servers: str,
             topic: str,
-            ssl_cafile: Optional[str],
-            ssl_certfile: Optional[str],
-            ssl_keyfile: Optional[str],
+            ssl_cafile: Optional[Union[str, Path]],
+            ssl_certfile: Optional[Union[str, Path]],
+            ssl_keyfile: Optional[Union[str, Path]],
             connect_interval_secs: float = 1.0,
     ):
         self.bootstrap_servers = bootstrap_servers
