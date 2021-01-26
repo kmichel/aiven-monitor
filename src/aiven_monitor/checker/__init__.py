@@ -214,7 +214,7 @@ class Probe:
 
 class Scheduler:
     """
-    Elects which :class:`Probe` objects must be run next.
+    Elects which :class:`Probe` object must be run next.
 
     Internally, each added :class:`Probe` is wrapped in a :class:`Schedule`.
     """
