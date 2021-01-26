@@ -67,7 +67,7 @@ async def async_main(config: configparser.ConfigParser):
     password_file = config.get('postgres.passwordfile')
     if password_file is not None:
         with open(password_file) as password_file:
-            postgres_password = password_file.read()
+            postgres_password = password_file.read().rstrip('\n')
     else:
         postgres_password = None
     recorder = PostgresRecorder(
