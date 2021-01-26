@@ -2,6 +2,7 @@
 Monitor website status and send to Kafka.
 
   - [API Reference](https://kmichel.github.io/aiven-monitor/)
+  - [Tests](https://kmichel.github.io/aiven-monitor/tests/)
   - [Coverage](https://kmichel.github.io/aiven-monitor/coverage/)
 
 # Dev Setup

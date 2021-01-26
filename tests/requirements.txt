@@ -1,5 +1,6 @@
 coverage[toml]
 pytest
+pytest-html-reporter
 pytest-httpx
 pytest-trio
 pytest-cov
