@@ -25,7 +25,7 @@ jobs:
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
         run: |
           echo "${POSTGRES_CA_PEM}" > tests/github/postgres.ca.pem
-          echo "${POSTGRES_PASSWORD}" > tests/github/postgres_password
+          echo "${POSTGRES_PASSWORD}" > tests/github/postgres.password
       - name: Run Tests
         env:
           AIVEN_TEST_WRITER_CONFIG_PATH: tests/github/writer.ini
