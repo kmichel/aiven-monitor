@@ -13,5 +13,7 @@ pip install --upgrade --editable .[speedups]
 ```shell script
 pip install --upgrade --constraint constraints.txt --requirement docs/requirements.txt
 pip install --upgrade --constraint constraints.txt --requirement tests/requirements.txt
-pytest --cov=. && coverage html && sphinx-build docs target/docs
+pytest
+coverage html
+sphinx-build -a docs target/docs
 ``` 

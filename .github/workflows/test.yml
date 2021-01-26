@@ -21,13 +21,12 @@ jobs:
           venv/bin/pip install --upgrade --constraint constraints.txt --requirement tests/requirements.txt
       - name: Run Tests
         run: |
-          venv/bin/pytest --cov=.
+          venv/bin/pytest
           venv/bin/coverage html
-          venv/bin/sphinx-build docs target/docs
-          rm -rf target/.pytest_cache target/.coverage
+          venv/bin/sphinx-build -a docs target/docs
       - name: Deploy Docs & Coverage
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./target
+          publish_dir: ./target/docs
 

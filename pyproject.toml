@@ -13,7 +13,7 @@ data_file = 'target/.coverage'
 omit = ['setup.py', 'tests/integration/deploy.py', 'venv/*']
 
 [tool.coverage.html]
-directory = 'target/coverage'
+directory = 'target/docs/coverage'
 
 [tool.black]
 line-length = 80
