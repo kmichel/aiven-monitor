@@ -1,0 +1,5 @@
+coverage[toml]
+pytest
+pytest-httpx
+pytest-trio
+pytest-cov

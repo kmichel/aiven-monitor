@@ -1,0 +1,151 @@
+version: '3.8'
+
+networks:
+  back:
+  front:
+
+secrets:
+  ca.certificate.pem:
+    external: true
+  kafka.properties:
+    external: true
+  kafka.keystore.jks:
+    external: true
+  kafka.truststore.jks:
+    external: true
+  zookeeper.properties:
+    external: true
+  zookeeper.keystore.jks:
+    external: true
+  zookeeper.truststore.jks:
+    external: true
+  postgres.certificate.pem:
+    external: true
+  postgres.private.pem:
+    external: true
+  checker.ini:
+    external: true
+  checker.certificate.pem:
+    external: true
+  checker.private.pem:
+    external: true
+  writer.ini:
+    external: true
+  writer.certificate.pem:
+    external: true
+  writer.private.pem:
+    external: true
+  postgres.password:
+    external: true
+
+services:
+  postgres:
+    image: postgres:12
+    user: postgres:postgres
+    command: -c ssl=on -c ssl_cert_file=/run/secrets/postgres.certificate.pem -c ssl_key_file=/run/secrets/postgres.private.pem
+    secrets:
+      - postgres.certificate.pem
+      - source: postgres.private.pem
+        uid: '999'
+        gid: '999'
+        mode: 0400
+      - source: postgres.password
+        uid: '999'
+        gid: '999'
+        mode: 0400
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD_FILE=/run/secrets/postgres.password
+    networks:
+      - back
+  kafka:
+    image: aiven-monitor-kafka
+    user: aiven:aiven
+    init: true
+    entrypoint: bin/kafka-server-start.sh /run/secrets/kafka.properties
+    secrets:
+      - source: kafka.properties
+        uid: '999'
+        gid: '999'
+        mode: 0400
+      - source: kafka.keystore.jks
+        uid: '999'
+        gid: '999'
+        mode: 0400
+      - kafka.truststore.jks
+    ports:
+      - '9092'
+    networks:
+      - back
+      - front
+    depends_on:
+      - zookeeper
+  zookeeper:
+    image: aiven-monitor-kafka
+    user: aiven:aiven
+    init: true
+    entrypoint: bin/zookeeper-server-start.sh /run/secrets/zookeeper.properties
+    secrets:
+      - source: zookeeper.properties
+        uid: '999'
+        gid: '999'
+        mode: 0400
+      - source: zookeeper.keystore.jks
+        uid: '999'
+        gid: '999'
+        mode: 0400
+      - zookeeper.truststore.jks
+    ports:
+      - '3181'
+    networks:
+      - back
+  checker:
+    image: aiven-monitor
+    user: aiven:aiven
+    init: true
+    entrypoint: aiven-monitor-checker
+    secrets:
+      - source: checker.ini
+        uid: '999'
+        gid: '999'
+        mode: 0400
+      - ca.certificate.pem
+      - checker.certificate.pem
+      - source: checker.private.pem
+        uid: '999'
+        gid: '999'
+        mode: 0400
+      - source: postgres.password
+        uid: '999'
+        gid: '999'
+        mode: 0400
+    networks:
+      - front
+    depends_on:
+      - kafka
+  writer:
+    image: aiven-monitor
+    user: aiven:aiven
+    init: true
+    entrypoint: aiven-monitor-writer
+    secrets:
+      - source: writer.ini
+        uid: '999'
+        gid: '999'
+        mode: 0400
+      - ca.certificate.pem
+      - writer.certificate.pem
+      - source: writer.private.pem
+        uid: '999'
+        gid: '999'
+        mode: 0400
+      - source: postgres.password
+        uid: '999'
+        gid: '999'
+        mode: 0400
+    networks:
+      - back
+    depends_on:
+      - postgres
+      - kafka
