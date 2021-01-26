@@ -194,19 +194,24 @@ command line as <cite>aiven-monitor-checker</cite> or <cite>python -m aiven_moni
 <dl class="py function">
 <dt id="aiven_monitor.checker.main">
 <code class="sig-prename descclassname">aiven_monitor.checker.</code><code class="sig-name descname">main</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#aiven_monitor.checker.main" title="Permalink to this definition">¶</a></dt>
-<dd><p>Configures the logging at <code class="xref py py-attr docutils literal notranslate"><span class="pre">loging.INFO</span></code> level and starts the
+<dd><p>Configures the logging at <code class="xref py py-attr docutils literal notranslate"><span class="pre">logging.INFO</span></code> level and starts the
 <a class="reference internal" href="#aiven_monitor.checker.async_main" title="aiven_monitor.checker.async_main"><code class="xref py py-func docutils literal notranslate"><span class="pre">async_main()</span></code></a> function using <cite>trio</cite>.</p>
-<p>The config is read from the <strong>AIVEN_MONITOR_WRITER_CONFIG_PATH</strong>
-environment variable, with a default value of ‘/run/secrets/checker.ini’.</p>
+<p>The configuration path is read from the
+<strong>AIVEN_MONITOR_CHECKER_CONFIG_PATH</strong> environment variable, with a default
+value of ‘/run/secrets/checker.ini’.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt id="aiven_monitor.checker.async_main">
-<em class="property">async </em><code class="sig-prename descclassname">aiven_monitor.checker.</code><code class="sig-name descname">async_main</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config</span><span class="p">:</span> <span class="n">configparser.ConfigParser</span></em><span class="sig-paren">)</span><a class="headerlink" href="#aiven_monitor.checker.async_main" title="Permalink to this definition">¶</a></dt>
+<em class="property">async </em><code class="sig-prename descclassname">aiven_monitor.checker.</code><code class="sig-name descname">async_main</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">base_path</span><span class="p">:</span> <span class="n">pathlib.Path</span></em>, <em class="sig-param"><span class="n">config</span><span class="p">:</span> <span class="n">configparser.SectionProxy</span></em><span class="sig-paren">)</span><a class="headerlink" href="#aiven_monitor.checker.async_main" title="Permalink to this definition">¶</a></dt>
 <dd><p>Starts a <a class="reference internal" href="#aiven_monitor.checker.Scheduler" title="aiven_monitor.checker.Scheduler"><code class="xref py py-class docutils literal notranslate"><span class="pre">Scheduler</span></code></a> and a <a class="reference internal" href="#aiven_monitor.checker.KafkaRecorder" title="aiven_monitor.checker.KafkaRecorder"><code class="xref py py-class docutils literal notranslate"><span class="pre">KafkaRecorder</span></code></a> together.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>config</strong> – The configuration for the <a class="reference internal" href="#aiven_monitor.checker.KafkaRecorder" title="aiven_monitor.checker.KafkaRecorder"><code class="xref py py-class docutils literal notranslate"><span class="pre">KafkaRecorder</span></code></a>.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>base_path</strong> – The reference path used to resolve relative paths
+in the configuration.</p></li>
+<li><p><strong>config</strong> – The configuration for the <a class="reference internal" href="#aiven_monitor.checker.KafkaRecorder" title="aiven_monitor.checker.KafkaRecorder"><code class="xref py py-class docutils literal notranslate"><span class="pre">KafkaRecorder</span></code></a>.</p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>
@@ -305,7 +310,7 @@ results in a <a class="reference internal" href="../aiven_monitor.html#aiven_mon
 <dl class="py class">
 <dt id="aiven_monitor.checker.Scheduler">
 <em class="property">class </em><code class="sig-prename descclassname">aiven_monitor.checker.</code><code class="sig-name descname">Scheduler</code><a class="headerlink" href="#aiven_monitor.checker.Scheduler" title="Permalink to this definition">¶</a></dt>
-<dd><p>Elects which <a class="reference internal" href="#aiven_monitor.checker.Probe" title="aiven_monitor.checker.Probe"><code class="xref py py-class docutils literal notranslate"><span class="pre">Probe</span></code></a> objects must be run next.</p>
+<dd><p>Elects which <a class="reference internal" href="#aiven_monitor.checker.Probe" title="aiven_monitor.checker.Probe"><code class="xref py py-class docutils literal notranslate"><span class="pre">Probe</span></code></a> object must be run next.</p>
 <p>Internally, each added <a class="reference internal" href="#aiven_monitor.checker.Probe" title="aiven_monitor.checker.Probe"><code class="xref py py-class docutils literal notranslate"><span class="pre">Probe</span></code></a> is wrapped in a <a class="reference internal" href="#aiven_monitor.checker.Schedule" title="aiven_monitor.checker.Schedule"><code class="xref py py-class docutils literal notranslate"><span class="pre">Schedule</span></code></a>.</p>
 <dl class="py method">
 <dt id="aiven_monitor.checker.Scheduler.add">
@@ -345,7 +350,7 @@ added to the queue.</p>
 <h2>KafkaRecorder<a class="headerlink" href="#kafkarecorder" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt id="aiven_monitor.checker.KafkaRecorder">
-<em class="property">class </em><code class="sig-prename descclassname">aiven_monitor.checker.</code><code class="sig-name descname">KafkaRecorder</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">bootstrap_servers</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">topic</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">ssl_cafile</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>str<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">ssl_certfile</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>str<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">ssl_keyfile</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>str<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">connect_interval_secs</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">1.0</span></em><span class="sig-paren">)</span><a class="headerlink" href="#aiven_monitor.checker.KafkaRecorder" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">aiven_monitor.checker.</code><code class="sig-name descname">KafkaRecorder</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">bootstrap_servers</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">topic</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">ssl_cafile</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>Union<span class="p">[</span>str<span class="p">, </span>pathlib.Path<span class="p">]</span><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">ssl_certfile</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>Union<span class="p">[</span>str<span class="p">, </span>pathlib.Path<span class="p">]</span><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">ssl_keyfile</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>Union<span class="p">[</span>str<span class="p">, </span>pathlib.Path<span class="p">]</span><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">connect_interval_secs</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">1.0</span></em><span class="sig-paren">)</span><a class="headerlink" href="#aiven_monitor.checker.KafkaRecorder" title="Permalink to this definition">¶</a></dt>
 <dd><p>A Kafka producer that takes <a class="reference internal" href="../aiven_monitor.html#aiven_monitor.Measure" title="aiven_monitor.Measure"><code class="xref py py-class docutils literal notranslate"><span class="pre">aiven_monitor.Measure</span></code></a> objects,
 and sends them to Kafka as utf-8 json serialized dicts.</p>
 <dl class="field-list simple">
