@@ -20,14 +20,14 @@ jobs:
           venv/bin/pip install --upgrade --constraint constraints.txt --requirement docs/requirements.txt
           venv/bin/pip install --upgrade --constraint constraints.txt --requirement tests/requirements.txt
       - name: Configure Aiven Secrets
-        with:
+        env:
           POSTGRES_CA_PEM: ${{ secrets.POSTGRES_CA_PEM }}
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
         run: |
           echo "${POSTGRES_CA_PEM}" > tests/github/postgres.ca.pem
           echo "${POSTGRES_PASSWORD}" > tests/github/postgres_password
       - name: Run Tests
-        with:
+        env:
           AIVEN_TEST_WRITER_CONFIG_PATH: tests/github/writer.ini
         run: |
           venv/bin/pytest
