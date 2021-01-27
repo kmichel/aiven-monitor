@@ -21,6 +21,9 @@ jobs:
           venv/bin/pip install --upgrade --constraint constraints.txt --requirement tests/requirements.txt
       - name: Configure Aiven Secrets
         env:
+          KAFKA_CA_PEM: ${{ secrets.KAFKA_CA_PEM }}
+          KAFKA_CERTIFICATE_PEM: ${{ secrets.KAFKA_CERTIFICATE_PEM }}
+          KAFKA_PRIVATE_PEM: ${{ secrets.KAFKA_PRIVATE_PEM }}
           POSTGRES_CA_PEM: ${{ secrets.POSTGRES_CA_PEM }}
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
         run: |
