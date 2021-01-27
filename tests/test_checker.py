@@ -1,6 +1,5 @@
 import configparser
 import datetime
-import re
 import statistics
 import tempfile
 import uuid
@@ -20,6 +19,7 @@ from aiven_monitor.checker import (
     Scheduler,
     create_kafka_recorder, create_probes,
 )
+from regex import Regex
 
 
 def test_create_probes_from_config():
@@ -52,7 +52,7 @@ def test_create_probes_from_config():
         assert first_probe.expected_pattern is None
         assert second_probe.url == 'https://example.com'
         assert second_probe.interval_secs == 45.6
-        assert second_probe.expected_pattern == re.compile(r'\bhello\b')
+        assert second_probe.expected_pattern == Regex(r'\bhello\b')
 
 
 def test_create_probes_from_missing_file_fails():
@@ -75,7 +75,7 @@ def test_create_probe():
 
 def test_create_probe_with_expected_pattern():
     probe = Probe('https://example.org', 10.3, r'\bHello\b')
-    assert probe.expected_pattern == re.compile(r'\bHello\b')
+    assert probe.expected_pattern == Regex(r'\bHello\b')
 
 
 def test_probe_repr_is_probe_definition():
@@ -156,10 +156,9 @@ async def test_probe_check_pattern_found(httpx_mock):
     recorder.record.assert_called_once()
 
 
-async def test_probe_check_pattern_found_chunked(autojump_clock, httpx_mock):
+async def test_probe_check_pattern_found_chunked(httpx_mock):
     async def stream_response():
         yield b'wait for'
-        await trio.sleep(1)
         yield b' it'
 
     httpx_mock.add_response(data=stream_response())

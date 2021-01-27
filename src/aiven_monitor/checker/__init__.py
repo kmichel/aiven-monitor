@@ -6,7 +6,6 @@ import heapq
 import json
 import logging
 import random
-import re
 from configparser import ConfigParser, SectionProxy
 from pathlib import Path
 from typing import Iterable, List, Optional, Union
@@ -16,8 +15,9 @@ import httpx
 import kafka
 import kafka.errors
 import trio
-from httpx._decoders import TextDecoder
+from regex.regex import Pattern, Regex
 
+from .pattern import DecodingError, search_pattern
 from .. import ConfigFileNotFound, Measure, VERSION, load_config, resolve_path
 
 USER_AGENT = f'aiven-monitor/${VERSION}'
@@ -166,8 +166,8 @@ class Probe:
         This must be strictly positive.
         
         See :class:`Schedule` for details about the scheduling logic."""
-        self.expected_pattern: Optional[re.Pattern] = (
-            None if expected_pattern is None else re.compile(expected_pattern)
+        self.expected_pattern: Optional[Pattern] = (
+            None if expected_pattern is None else Regex(expected_pattern)
         )
         """ An optional regular expression to search in the response."""
 
@@ -212,58 +212,50 @@ class Probe:
             with trio.move_on_after(REQUEST_TIMEOUT_SECS):
                 try:
                     async with client.stream('GET', self.url) as response:
-                        measure.protocol = response.http_version
-                        measure.status_code = response.status_code
-                        chunks = []
-                        response_size_bytes = 0
-                        async for chunk in response.aiter_bytes():
-                            # Make sure trio has the opportunity to check timeouts
-                            await trio.sleep(0)
-                            # We only record the content if we need it
-                            allowed_bytes = RESPONSE_MAX_BYTES - response_size_bytes
-                            expects_pattern = self.expected_pattern is not None
-                            if expects_pattern and allowed_bytes > 0:
-                                # Make sure we stop at RESPONSE_MAX_BYTES without
-                                # being affected by the exact size of each chunk.
-                                # Beware, we wil cut a multi-byte character in half.
-                                chunk = chunk[:allowed_bytes]
-                                chunks.append(chunk)
-                            response_size_bytes += len(chunk)
-                            if response_size_bytes >= RESPONSE_MAX_BYTES:
-                                break
-                        await response.aclose()
-                        redirections_time_secs = sum(
-                            r.elapsed.total_seconds() for r in response.history
-                        )
-                        measure.response_time_secs = (
-                                response.elapsed.total_seconds()
-                                + redirections_time_secs
-                        )
-                        measure.response_size_bytes = response_size_bytes
-                        if self.expected_pattern is not None:
-                            try:
-                                # I wish we didn't call protected httpx code here
-                                # but it's better than rewriting and testing their
-                                # decoder, and this separates the concerns of
-                                # handling large vs. malformed responses.
-                                text_chunks = []
-                                decoder = TextDecoder(
-                                    encoding=response.encoding)
-                                for chunk in chunks:
-                                    text_chunks.append(decoder.decode(chunk))
-                                text_chunks.append(decoder.flush())
-                            except ValueError as value_error:
-                                # TODO: Put that in the measure instead
-                                logger.error('response-error: %s',
-                                             str(value_error))
-                            else:
-                                content = ''.join(text_chunks)
-                                match = self.expected_pattern.search(content)
-                                measure.pattern_was_found = match is not None
+                        await self.handle_response(measure, response)
                 except httpx.HTTPError as http_error:
                     # TODO: Put that in the measure instead
                     logger.error('response-error: %s', str(http_error))
             await recorder.record(measure)
+
+    async def handle_response(self, measure: Measure, response: httpx.Response):
+        measure.protocol = response.http_version
+        measure.status_code = response.status_code
+        chunks = []
+        response_size_bytes = 0
+        async for chunk in response.aiter_bytes():
+            # Make sure trio has the opportunity to check timeouts
+            await trio.sleep(0)
+            # We only record the content if we need it
+            allowed_bytes = RESPONSE_MAX_BYTES - response_size_bytes
+            expects_pattern = self.expected_pattern is not None
+            if expects_pattern and allowed_bytes > 0:
+                # Make sure we stop at RESPONSE_MAX_BYTES without
+                # being affected by the exact size of each chunk.
+                # Beware, we wil cut a multi-byte character in half.
+                chunk = chunk[:allowed_bytes]
+                chunks.append(chunk)
+            response_size_bytes += len(chunk)
+            if response_size_bytes >= RESPONSE_MAX_BYTES:
+                break
+        await response.aclose()
+        redirections_time_secs = sum(
+            r.elapsed.total_seconds() for r in response.history
+        )
+        measure.response_time_secs = (
+                response.elapsed.total_seconds() + redirections_time_secs
+        )
+        measure.response_size_bytes = response_size_bytes
+        if self.expected_pattern is not None:
+            try:
+                measure.pattern_was_found = await search_pattern(
+                    self.expected_pattern,
+                    chunks,
+                    response.encoding,
+                )
+            except DecodingError as error:
+                # TODO: Put that in the measure instead
+                logger.error('response-error: %s', str(error))
 
 
 class Scheduler:

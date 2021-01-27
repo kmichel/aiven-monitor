@@ -34,6 +34,7 @@ pytest-httpx==0.10.1
 pytest-trio==0.7.0
 pytz==2020.5
 requests==2.25.1
+regex==2020.11.13
 rfc3986==1.4.0
 sniffio==1.2.0
 snowballstemmer==2.1.0
