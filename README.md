@@ -5,11 +5,11 @@
   - [Coverage](https://kmichel.github.io/aiven-monitor/coverage/)
   - Compatible with Python 3.7, 3.8 and 3.9
 
-Monitor websites status and send to Kafka then record to a Postgres database.
+Website monitoring with Kafka and Postgres.
 
-The checker is responsible for running the monitoring probes and sending to Kafka.
-
-The writer is responsible for reading from Kafka and writing to Postgres.
+The project is split in two binaries:
+ - `aiven-monitor-checker` : runs the monitoring probes and sends the result to Kafka.
+ - `aiven-monitor-writer` : reads from Kafka and stores the result in Postgres.
 
 The monitoring probes are [configurable from a file](https://kmichel.github.io/aiven-monitor/aiven_monitor/checker.html#configuration-options):
 
