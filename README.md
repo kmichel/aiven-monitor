@@ -27,10 +27,9 @@ interval_secs = 120
 
 # Dev Setup
 ```shell script
-python3 -m venv venv
-source ven/bin/activate
-pip install --upgrade pip setuptools wheel
-pip install --upgrade --editable .[speedups]
+python3 -m venv --clear --upgrade-deps venv
+source venv/bin/activate
+venv/bin/pip install --constraint constraints.txt --requirement dev-requirements.txt
 ```
 
 # Containerized Demo
@@ -60,9 +59,6 @@ aiven-monitor-writer --config=/path/to/writer.ini
 # Running Tests & Building Docs
 The tests are also configured with Github Actions to run against real [Aiven](https://aiven.io) services after each push.
 ```shell script
-pip install --upgrade --constraint constraints.txt --requirement docs/requirements.txt
-pip install --upgrade --constraint constraints.txt --requirement tests/requirements.txt
 pytest
-coverage html
 sphinx-build -a docs target/docs
 ``` 

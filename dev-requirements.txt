@@ -1,6 +1,9 @@
+--editable .[speedups]
 coverage[toml]
 pytest
 pytest-html-reporter
 pytest-httpx
 pytest-trio
 pytest-cov
+sphinx
+sphinx-rtd-theme

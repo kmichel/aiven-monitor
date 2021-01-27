@@ -13,12 +13,8 @@ jobs:
           python-version: 3.9.1
       - name: Setup Dependencies
         run: |
-          python3 -m venv venv
-          venv/bin/pip install --upgrade pip setuptools wheel
-          venv/bin/pip install --constraint constraints.txt .[speedups]
-          venv/bin/pip install --editable .[speedups]
-          venv/bin/pip install --upgrade --constraint constraints.txt --requirement docs/requirements.txt
-          venv/bin/pip install --upgrade --constraint constraints.txt --requirement tests/requirements.txt
+          python3 -m venv --clear --upgrade-deps venv
+          venv/bin/pip install --upgrade --constraint constraints.txt --requirement dev-requirements.txt
       - name: Configure Aiven Secrets
         env:
           KAFKA_CA_PEM: ${{ secrets.KAFKA_CA_PEM }}
@@ -38,7 +34,6 @@ jobs:
           AIVEN_TEST_WRITER_CONFIG_PATH: tests/github/writer.ini
         run: |
           venv/bin/pytest
-          venv/bin/coverage html
           venv/bin/sphinx-build -a docs target/docs
       - name: Deploy Docs & Coverage
         uses: peaceiris/actions-gh-pages@v3
