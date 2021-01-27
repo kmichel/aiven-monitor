@@ -3,6 +3,7 @@
   - [API Reference](https://kmichel.github.io/aiven-monitor/)
   - [Tests](https://kmichel.github.io/aiven-monitor/tests/)
   - [Coverage](https://kmichel.github.io/aiven-monitor/coverage/)
+  - Compatible with Python 3.7, 3.8 and 3.9
 
 Monitor websites status and send to Kafka then record to a Postgres database.
 

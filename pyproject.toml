@@ -10,10 +10,29 @@ cache_dir = 'target/.pytest_cache'
 [tool.coverage.run]
 branch = true
 data_file = 'target/.coverage'
-omit = ['setup.py', 'tests/integration/deploy.py', 'venv/*']
+source = ['src']
+omit = ['setup.py', 'venv/*']
+
+[tool.coverage.paths]
+source = ['src', '.tox/*/site-packages']
 
 [tool.coverage.html]
 directory = 'target/docs/coverage'
+
+[tool.tox]
+legacy_tox_ini = """
+[tox]
+envlist = py37,py38,py39
+[testenv]
+passenv =
+    AIVEN_TEST_CHECKER_CONFIG_PATH
+    AIVEN_TEST_WRITER_CONFIG_PATH
+deps =
+    -cconstraints.txt
+    -rdev-requirements.txt
+commands =
+    pytest
+"""
 
 [tool.black]
 line-length = 80

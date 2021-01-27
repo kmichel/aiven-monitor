@@ -7,3 +7,4 @@ pytest-trio
 pytest-cov
 sphinx
 sphinx-rtd-theme
+tox
