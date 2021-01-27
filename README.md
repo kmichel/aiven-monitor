@@ -10,8 +10,27 @@ The writer is responsible for reading from Kafka and writing to Postgres.
   - [Tests](https://kmichel.github.io/aiven-monitor/tests/)
   - [Coverage](https://kmichel.github.io/aiven-monitor/coverage/)
 
-# Running the Checker
+# Dev Setup
+```shell script
+python3 -m venv venv
+source ven/bin/activate
+pip install --upgrade pip setuptools wheel
+pip install --upgrade --editable .[speedups]
+```
 
+# Containerized Demo
+This runs local Postgres and Kafka instances along with the checker and writer.
+
+This still requires Python, OpenSSL and keytool (from the Java JRE/JDK) in addition to Docker.
+
+Docker Swarm is used to handle SSL secrets between the different services.
+```
+docker swarm init
+tests/integration/deploy.py
+docker service logs aiven-monitor-test_writer --timestamps 2>&1 -f
+```
+
+# Running the Checker
 See the [Checker documentation](https://kmichel.github.io/aiven-monitor/aiven_monitor/checker.html#configuration-options) for the configuration options. 
 ```shell script
 aiven-monitor-checker --config=/path/to/checker.ini
@@ -24,15 +43,7 @@ See the [Writer documentation](https://kmichel.github.io/aiven-monitor/aiven_mon
 aiven-monitor-writer --config=/path/to/writer.ini
 ```
 
-# Dev Setup
-```shell script
-python3 -m venv venv
-source ven/bin/activate
-pip install --upgrade pip setuptools wheel
-pip install --upgrade --editable .[speedups]
-```
-
-# Tests & Docs
+# Running Tests & Building Docs
 ```shell script
 pip install --upgrade --constraint constraints.txt --requirement docs/requirements.txt
 pip install --upgrade --constraint constraints.txt --requirement tests/requirements.txt
