@@ -38,6 +38,10 @@ secrets:
   postgres.password:
     external: true
 
+configs:
+  probes.ini:
+    file: ./probes.ini
+
 services:
   postgres:
     image: postgres:12
@@ -105,6 +109,8 @@ services:
     user: aiven:aiven
     init: true
     entrypoint: aiven-monitor-checker --config=/run/secrets/checker.ini
+    configs:
+      - probes.ini
     secrets:
       - source: checker.ini
         uid: '999'
