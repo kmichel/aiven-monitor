@@ -109,7 +109,7 @@ async def test_probe_check(httpx_mock):
     recorder = mock.MagicMock(spec_set=KafkaRecorder)
     pre_start = datetime.datetime.utcnow()
 
-    def record(measure: Measure):
+    async def record(measure: Measure):
         assert measure.url == 'https://example.org'
         assert measure.endpoint == 'test-endpoint'
         assert measure.protocol == 'HTTP/1.1'
@@ -134,7 +134,7 @@ async def test_probe_check_http2(httpx_mock):
     probe = Probe('https://example.org', 10.3, None)
     recorder = mock.MagicMock(spec_set=KafkaRecorder)
 
-    def record(measure: Measure):
+    async def record(measure: Measure):
         assert measure.protocol == 'HTTP/2'
 
     recorder.record.side_effect = record
@@ -147,7 +147,7 @@ async def test_probe_check_pattern_found(httpx_mock):
     probe = Probe('https://example.org', 10.3, 'w.rld')
     recorder = mock.MagicMock(spec_set=KafkaRecorder)
 
-    def record(measure: Measure):
+    async def record(measure: Measure):
         assert measure.expected_pattern == 'w.rld'
         assert measure.pattern_was_found
 
@@ -165,7 +165,7 @@ async def test_probe_check_pattern_found_chunked(httpx_mock):
     probe = Probe('https://example.org', 10.3, 'wait for it')
     recorder = mock.MagicMock(spec_set=KafkaRecorder)
 
-    def record(measure: Measure):
+    async def record(measure: Measure):
         assert measure.expected_pattern == 'wait for it'
         assert measure.pattern_was_found
 
@@ -179,7 +179,7 @@ async def test_probe_check_pattern_not_found(httpx_mock):
     probe = Probe('https://example.org', 10.3, 'mo.n')
     recorder = mock.MagicMock(spec_set=KafkaRecorder)
 
-    def record(measure: Measure):
+    async def record(measure: Measure):
         assert measure.expected_pattern == 'mo.n'
         assert measure.pattern_was_found is False
 
@@ -195,7 +195,7 @@ async def test_probe_check_pattern_on_invalid_text(httpx_mock):
     probe = Probe('https://example.org', 10.3, 'w.rld')
     recorder = mock.MagicMock(spec_set=KafkaRecorder)
 
-    def record(measure: Measure):
+    async def record(measure: Measure):
         assert measure.expected_pattern == 'w.rld'
         assert measure.pattern_was_found is None
 
@@ -209,7 +209,7 @@ async def test_probe_check_pattern_found_on_non_200(httpx_mock):
     probe = Probe('https://example.org', 10.3, r'not\s+here')
     recorder = mock.MagicMock(spec_set=KafkaRecorder)
 
-    def record(measure: Measure):
+    async def record(measure: Measure):
         assert measure.status_code == 404
         assert measure.expected_pattern == r'not\s+here'
         assert measure.pattern_was_found
@@ -230,7 +230,7 @@ async def test_probe_stops_on_slow_response(autojump_clock, httpx_mock):
 
     start_time = trio.current_time()
 
-    def record(measure: Measure):
+    async def record(measure: Measure):
         assert measure.url == 'https://example.org'
         assert measure.endpoint == 'test-endpoint'
         assert measure.protocol == 'HTTP/1.1'
@@ -252,7 +252,7 @@ async def test_probe_stops_on_large_response(httpx_mock):
     probe = Probe('https://example.org', 10.3, None)
     recorder = mock.MagicMock(spec_set=KafkaRecorder)
 
-    def record(measure: Measure):
+    async def record(measure: Measure):
         assert measure.url == 'https://example.org'
         assert measure.endpoint == 'test-endpoint'
         assert measure.protocol == 'HTTP/1.1'
