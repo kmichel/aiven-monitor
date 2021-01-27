@@ -39,6 +39,7 @@ def test_create_kafka_source_from_config():
                 'kafka.ssl.cafile': 'relative/cafile',
                 'kafka.ssl.certfile': '/absolute/certfile',
                 'kafka.ssl.keyfile': '../bare_keyfile',
+                'kafka.connect_interval_secs': '5'
             }
         }
     )
@@ -48,6 +49,7 @@ def test_create_kafka_source_from_config():
     assert kafka_source.ssl_cafile == Path('/foo/bar/relative/cafile')
     assert kafka_source.ssl_certfile == Path('/absolute/certfile')
     assert kafka_source.ssl_keyfile == Path('/foo/bar/../bare_keyfile')
+    assert kafka_source.connect_interval_secs == 5.0
 
 
 def test_create_kafka_source_from_partial_config():
@@ -66,6 +68,7 @@ def test_create_kafka_source_from_partial_config():
     assert kafka_source.ssl_cafile is None
     assert kafka_source.ssl_certfile is None
     assert kafka_source.ssl_keyfile is None
+    assert kafka_source.connect_interval_secs is None
 
 
 async def test_kafka_source_start_creates_consumer():
@@ -166,6 +169,7 @@ def test_create_postgres_recorder_from_config():
                     'postgres.passwordfile': password_file.name,
                     'postgres.database': 'defaultdb',
                     'postgres.ssl.rootcertfile': 'certfile',
+                    'postgres.connect_interval_secs': '5'
                 }
             }
         )
@@ -179,6 +183,7 @@ def test_create_postgres_recorder_from_config():
         assert postgres_recorder.password == 'hello'
         assert postgres_recorder.database == 'defaultdb'
         assert postgres_recorder.ssl_rootcertfile == Path('/foo/bar/certfile')
+        assert postgres_recorder.connect_interval_secs == 5.0
 
 
 def test_create_postgres_recorder_from_partial_config():
@@ -200,6 +205,7 @@ def test_create_postgres_recorder_from_partial_config():
     assert postgres_recorder.password is None
     assert postgres_recorder.database is None
     assert postgres_recorder.ssl_rootcertfile is None
+    assert postgres_recorder.connect_interval_secs is None
 
 
 async def test_postgres_recorder_start_creates_cursor(autojump_clock):

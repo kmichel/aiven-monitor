@@ -28,6 +28,7 @@ DEFAULT_CONFIG = {
     'endpoint': 'default',
     'kafka.bootstrap_servers': 'localhost',
     'kafka.topic': 'aiven_monitor_measure',
+    'kafka.connect_interval_secs': '1'
 }
 
 logger = logging.getLogger('aiven-monitor-checker')
@@ -68,6 +69,7 @@ def create_kafka_recorder(
         resolve_path(base_path, config.get('kafka.ssl.cafile')),
         resolve_path(base_path, config.get('kafka.ssl.certfile')),
         resolve_path(base_path, config.get('kafka.ssl.keyfile')),
+        config.getfloat('kafka.connect_interval_secs')
     )
 
 

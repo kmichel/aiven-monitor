@@ -397,6 +397,7 @@ def test_create_kafka_recorder_from_config():
                 'kafka.ssl.cafile': 'relative/cafile',
                 'kafka.ssl.certfile': '/absolute/certfile',
                 'kafka.ssl.keyfile': '../bare_keyfile',
+                'kafka.connect_interval_secs': '5'
             }
         }
     )
@@ -406,6 +407,7 @@ def test_create_kafka_recorder_from_config():
     assert kafka_recorder.ssl_cafile == Path('/foo/bar/relative/cafile')
     assert kafka_recorder.ssl_certfile == Path('/absolute/certfile')
     assert kafka_recorder.ssl_keyfile == Path('/foo/bar/../bare_keyfile')
+    assert kafka_recorder.connect_interval_secs == 5.0
 
 
 def test_create_kafka_recorder_from_partial_config():
@@ -424,6 +426,7 @@ def test_create_kafka_recorder_from_partial_config():
     assert kafka_recorder.ssl_cafile is None
     assert kafka_recorder.ssl_certfile is None
     assert kafka_recorder.ssl_keyfile is None
+    assert kafka_recorder.connect_interval_secs is None
 
 
 async def test_kafka_recorder_start_creates_producer():
