@@ -166,6 +166,10 @@ class KafkaSource:
                     ssl_certfile=self.ssl_certfile,
                     ssl_keyfile=self.ssl_keyfile,
                     security_protocol='SSL',
+                    # This isn't pretty but it doesn't actually changes the
+                    # internal polling done by python-kafka , it only allows
+                    # the timeout to surface up to get_measure()
+                    consumer_timeout_ms=500,
                 )
             except kafka.errors.NoBrokersAvailable:
                 await trio.sleep(self.connect_interval_secs)
@@ -190,8 +194,17 @@ class KafkaSource:
             while self.consumer is None:
                 await self.has_consumer.wait()
         logger.info('measure-get')
-        raw_value = self.consumer.__next__().value
-        return Measure.from_dict(json.loads(raw_value.decode('utf-8')))
+        while True:
+            try:
+                raw_value = self.consumer.__next__().value
+            except StopIteration:
+                # That's where we use the consumer_timeout_ms we previously
+                # set on the kafka.KafkaConsumer to allow us to "regularly"
+                # yield control to another coroutine. This confirms that doing
+                # async code with sync libraries was a great idea.
+                await trio.sleep(0)
+            else:
+                return Measure.from_dict(json.loads(raw_value.decode('utf-8')))
 
 
 class PostgresRecorder:
