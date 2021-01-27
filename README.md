@@ -1,14 +1,29 @@
 # Aiven Monitor
 
-Monitor website status and send to Kafka then record to a Postgres database.
+  - [API Reference](https://kmichel.github.io/aiven-monitor/)
+  - [Tests](https://kmichel.github.io/aiven-monitor/tests/)
+  - [Coverage](https://kmichel.github.io/aiven-monitor/coverage/)
+
+Monitor websites status and send to Kafka then record to a Postgres database.
 
 The checker is responsible for running the monitoring probes and sending to Kafka.
 
 The writer is responsible for reading from Kafka and writing to Postgres.
 
-  - [API Reference](https://kmichel.github.io/aiven-monitor/)
-  - [Tests](https://kmichel.github.io/aiven-monitor/tests/)
-  - [Coverage](https://kmichel.github.io/aiven-monitor/coverage/)
+The monitoring probes are [configurable from a file](https://kmichel.github.io/aiven-monitor/aiven_monitor/checker.html#configuration-options):
+
+```ini
+[probe.aiven]
+url = https://www.aiven.io
+interval_secs = 20
+expected_pattern = Perf.?rmant|\bFree\b|Scalable
+[probe.github]
+url = https://www.github.icom
+interval_secs = 60
+[probe.google]
+url = https://www.google.fr
+interval_secs = 120
+```
 
 # Dev Setup
 ```shell script
