@@ -190,6 +190,8 @@ optional arguments:
 <div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[checker]</span>
 <span class="c1">#  A name for the location from where the checker is run. Default value is &quot;default&quot;.</span>
 <span class="na">endpoint</span> <span class="o">=</span> <span class="s">default</span>
+<span class="c1"># Path to configuration file for the probes</span>
+<span class="na">probes_file</span> <span class="o">=</span> <span class="s">probes.ini</span>
 <span class="c1"># A comma-separated list of Kafka servers. Will connect to &quot;localhost:9092&quot; if not configured.</span>
 <span class="na">kafka.bootstrap_servers</span> <span class="o">=</span> <span class="s">&quot;ocalhost:9092</span>
 <span class="c1"># Kafka topic receiving the produced Measure objects. Default value is &quot;aiven_monitor_measure&quot;.</span>
@@ -202,6 +204,19 @@ optional arguments:
 <span class="na">kafka.ssl.keyfile</span> <span class="o">=</span> <span class="s">/path/to/kafka.private.pem</span>
 <span class="c1"># Number of seconds before retrying to connect. Default value is 1.0.</span>
 <span class="na">kafka.connect_interval_secs</span> <span class="o">=</span> <span class="s">1.0</span>
+</pre></div>
+</div>
+<p>The probes are configured in a separate <strong>probes.ini</strong> file, with one section for each probe :</p>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[probe.aiven]</span>
+<span class="c1"># The URL to check</span>
+<span class="na">url</span> <span class="o">=</span> <span class="s">https://aiven.io</span>
+<span class="c1"># The approximate interval between each check</span>
+<span class="na">interval_secs</span> <span class="o">=</span> <span class="s">60</span>
+<span class="c1"># A regular expression pattern to search in the response</span>
+<span class="na">expected_pattern</span> <span class="o">=</span> <span class="s">Perf.?rmant</span>
+<span class="k">[probe.google]</span>
+<span class="na">url</span> <span class="o">=</span> <span class="s">https://www.google.com</span>
+<span class="na">interval_secs</span> <span class="o">=</span> <span class="s">120</span>
 </pre></div>
 </div>
 </div>
