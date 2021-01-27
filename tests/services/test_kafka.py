@@ -25,7 +25,7 @@ if os.environ.get('AIVEN_TEST_WRITER_CONFIG_PATH'):
 
 requires_kafka = pytest.mark.skipif(
     not checker_config_path.exists() or not writer_config_path.exists(),
-    reason="Kafka must be configured with AIVEN_TEST_CHECKER_CONFIG_PATH and AIVEN_TEST_WRITER_CONFIG_PATH"
+    reason="Kafka must be configured with AIVEN_TEST_CHECKER_CONFIG_PATH and AIVEN_TEST_WRITER_CONFIG_PATH",
 )
 
 
@@ -48,7 +48,7 @@ async def test_kafka_roundtrip():
                 uuid.uuid4(),
                 'test-endpoint',
                 datetime.datetime(2020, 1, 2, 3, 4, 5, 6),
-                None
+                None,
             )
 
             async def wait_and_send():

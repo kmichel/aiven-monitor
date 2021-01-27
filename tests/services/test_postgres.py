@@ -20,7 +20,7 @@ if os.environ.get('AIVEN_TEST_WRITER_CONFIG_PATH'):
 
 requires_postgres = pytest.mark.skipif(
     not writer_config_path.exists(),
-    reason="Postgres must be configured with AIVEN_TEST_WRITER_CONFIG_PATH"
+    reason="Postgres must be configured with AIVEN_TEST_WRITER_CONFIG_PATH",
 )
 
 
@@ -52,7 +52,8 @@ async def test_postgres_create_table():
                 select count(*) from pg_tables
                 where tablename  = %s
                 ''',
-                (recorder.measure_table,))
+                (recorder.measure_table,),
+            )
             assert recorder.cursor.fetchone() == (1,)
 
 

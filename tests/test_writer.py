@@ -39,7 +39,7 @@ def test_create_kafka_source_from_config():
                 'kafka.ssl.cafile': 'relative/cafile',
                 'kafka.ssl.certfile': '/absolute/certfile',
                 'kafka.ssl.keyfile': '../bare_keyfile',
-                'kafka.connect_interval_secs': '5'
+                'kafka.connect_interval_secs': '5',
             }
         }
     )
@@ -169,7 +169,7 @@ def test_create_postgres_recorder_from_config():
                     'postgres.passwordfile': password_file.name,
                     'postgres.database': 'defaultdb',
                     'postgres.ssl.rootcertfile': 'certfile',
-                    'postgres.connect_interval_secs': '5'
+                    'postgres.connect_interval_secs': '5',
                 }
             }
         )

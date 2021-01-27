@@ -397,7 +397,7 @@ def test_create_kafka_recorder_from_config():
                 'kafka.ssl.cafile': 'relative/cafile',
                 'kafka.ssl.certfile': '/absolute/certfile',
                 'kafka.ssl.keyfile': '../bare_keyfile',
-                'kafka.connect_interval_secs': '5'
+                'kafka.connect_interval_secs': '5',
             }
         }
     )
