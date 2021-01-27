@@ -38,7 +38,7 @@
     
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="aiven_monitor" href="aiven_monitor.html" /> 
+    <link rel="next" title="Checker" href="configuration.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -83,7 +83,12 @@
               
             
             
-              <p class="caption"><span class="caption-text">API Reference</span></p>
+              <p class="caption"><span class="caption-text">Configuration</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Checker</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html#writer">Writer</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="aiven_monitor.html">aiven_monitor</a></li>
 </ul>
@@ -155,18 +160,41 @@
             
   <div class="section" id="aiven-monitor-documentation">
 <h1>aiven-monitor documentation<a class="headerlink" href="#aiven-monitor-documentation" title="Permalink to this headline">¶</a></h1>
-<p>Monitor website status and send to Kafka.</p>
+<p>Website monitoring with Kafka and Postgres.</p>
+<p>The project is split in two programs:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">aiven-monitor-checker</span></code> : runs the monitoring probes and sends the result to Kafka.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">aiven-monitor-writer</span></code> : reads from Kafka and stores the result in Postgres.</p></li>
+</ul>
+</div></blockquote>
+</div>
+<div class="section" id="links">
+<h1>Links<a class="headerlink" href="#links" title="Permalink to this headline">¶</a></h1>
 <ul class="simple">
 <li><p><a class="reference external" href="https://github.com/kmichel/aiven-monitor/">Github Repository</a></p></li>
 <li><p><a class="reference external" href="./tests/">Tests</a></p></li>
 <li><p><a class="reference external" href="./coverage/">Coverage</a></p></li>
 </ul>
 <div class="toctree-wrapper compound">
+<p class="caption"><span class="caption-text">Configuration</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Checker</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#checker-ini">checker.ini</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#probes-ini">probes.ini</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html#writer">Writer</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#writer-ini">writer.ini</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="toctree-wrapper compound">
 <p class="caption"><span class="caption-text">API Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="aiven_monitor.html">aiven_monitor</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="aiven_monitor/checker.html">checker</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="aiven_monitor/checker.html#configuration-options">Configuration Options</a></li>
 <li class="toctree-l3"><a class="reference internal" href="aiven_monitor/checker.html#entry-points">Entry Points</a></li>
 <li class="toctree-l3"><a class="reference internal" href="aiven_monitor/checker.html#probe">Probe</a></li>
 <li class="toctree-l3"><a class="reference internal" href="aiven_monitor/checker.html#schedule">Schedule</a></li>
@@ -175,7 +203,6 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="aiven_monitor/writer.html">writer</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="aiven_monitor/writer.html#configuration-options">Configuration Options</a></li>
 <li class="toctree-l3"><a class="reference internal" href="aiven_monitor/writer.html#entry-points">Entry Points</a></li>
 <li class="toctree-l3"><a class="reference internal" href="aiven_monitor/writer.html#kafkasource">KafkaSource</a></li>
 <li class="toctree-l3"><a class="reference internal" href="aiven_monitor/writer.html#postgresrecorder">PostgresRecorder</a></li>
@@ -202,7 +229,7 @@
           </div>
           <footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-        <a href="aiven_monitor.html" class="btn btn-neutral float-right" title="aiven_monitor" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="configuration.html" class="btn btn-neutral float-right" title="Checker" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

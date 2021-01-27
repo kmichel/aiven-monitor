@@ -84,11 +84,15 @@
               
             
             
-              <p class="caption"><span class="caption-text">API Reference</span></p>
+              <p class="caption"><span class="caption-text">Configuration</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../configuration.html">Checker</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../configuration.html#writer">Writer</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="../aiven_monitor.html">aiven_monitor</a><ul class="current">
 <li class="toctree-l2 current"><a class="current reference internal" href="#">checker</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#configuration-options">Configuration Options</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#entry-points">Entry Points</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#probe">Probe</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#schedule">Schedule</a></li>
@@ -173,7 +177,7 @@
 <h1>checker<a class="headerlink" href="#checker" title="Permalink to this headline">¶</a></h1>
 <p>This module connects to a list of websites at regular interval and records
 connection metrics into a Kafka topic.</p>
-<p>This can be run as as <code class="docutils literal notranslate"><span class="pre">aiven-monitor-checker</span></code> or <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">aiven_monitor.checker</span></code> :</p>
+<p>This can be also run as <code class="docutils literal notranslate"><span class="pre">aiven-monitor-checker</span></code> or <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">aiven_monitor.checker</span></code> :</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>usage: aiven-monitor-checker [-h] [--config CONFIG]
 
 Connects to a list of websites at regular interval and records connection metrics into a Kafka topic.
@@ -182,43 +186,6 @@ optional arguments:
   -h, --help       show this help message and exit
   --config CONFIG  path to the config file. absolute or relative to the working directory. defaults to &quot;checker.ini&quot;.
 </pre></div>
-</div>
-<div class="section" id="configuration-options">
-<h2>Configuration Options<a class="headerlink" href="#configuration-options" title="Permalink to this headline">¶</a></h2>
-<p>The configuration options are read from a <strong>reader.ini</strong> file using <code class="xref py py-class docutils literal notranslate"><span class="pre">ConfigParser</span></code>.</p>
-<p>All the following settings must be in a <strong>[checker]</strong> section of the ini file.</p>
-<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[checker]</span>
-<span class="c1">#  A name for the location from where the checker is run. Default value is &quot;default&quot;.</span>
-<span class="na">endpoint</span> <span class="o">=</span> <span class="s">default</span>
-<span class="c1"># Path to configuration file for the probes</span>
-<span class="na">probes_file</span> <span class="o">=</span> <span class="s">probes.ini</span>
-<span class="c1"># A comma-separated list of Kafka servers. Will connect to &quot;localhost:9092&quot; if not configured.</span>
-<span class="na">kafka.bootstrap_servers</span> <span class="o">=</span> <span class="s">&quot;ocalhost:9092</span>
-<span class="c1"># Kafka topic receiving the produced Measure objects. Default value is &quot;aiven_monitor_measure&quot;.</span>
-<span class="na">kafka.topic</span> <span class="o">=</span> <span class="s">aiven_monitor_measure</span>
-<span class="c1"># Path to the PEM certificate of the authority used to authenticate the Kafka servers. Optional.</span>
-<span class="na">kafka.ssl.cafile</span> <span class="o">=</span> <span class="s">/path/to/kafka.ca.pem</span>
-<span class="c1"># Path to the PEM certificate used to authenticate the checker. Optional.</span>
-<span class="na">kafka.ssl.certfile</span> <span class="o">=</span> <span class="s">/path/to/kafka.certificate.pem</span>
-<span class="c1"># Path to the PEM private key used to authenticate the checker. Optional.</span>
-<span class="na">kafka.ssl.keyfile</span> <span class="o">=</span> <span class="s">/path/to/kafka.private.pem</span>
-<span class="c1"># Number of seconds before retrying to connect. Default value is 1.0.</span>
-<span class="na">kafka.connect_interval_secs</span> <span class="o">=</span> <span class="s">1.0</span>
-</pre></div>
-</div>
-<p>The probes are configured in a separate <strong>probes.ini</strong> file, with one section for each probe :</p>
-<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[probe.aiven]</span>
-<span class="c1"># The URL to check</span>
-<span class="na">url</span> <span class="o">=</span> <span class="s">https://aiven.io</span>
-<span class="c1"># The approximate interval between each check</span>
-<span class="na">interval_secs</span> <span class="o">=</span> <span class="s">60</span>
-<span class="c1"># A regular expression pattern to search in the response</span>
-<span class="na">expected_pattern</span> <span class="o">=</span> <span class="s">Perf.?rmant</span>
-<span class="k">[probe.google]</span>
-<span class="na">url</span> <span class="o">=</span> <span class="s">https://www.google.com</span>
-<span class="na">interval_secs</span> <span class="o">=</span> <span class="s">120</span>
-</pre></div>
-</div>
 </div>
 <div class="section" id="entry-points">
 <h2>Entry Points<a class="headerlink" href="#entry-points" title="Permalink to this headline">¶</a></h2>

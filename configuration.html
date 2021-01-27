@@ -1,0 +1,308 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Checker &mdash; aiven-monitor  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="aiven_monitor" href="aiven_monitor.html" />
+    <link rel="prev" title="aiven-monitor documentation" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> aiven-monitor
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Configuration</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Checker</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#checker-ini">checker.ini</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#probes-ini">probes.ini</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="#writer">Writer</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#writer-ini">writer.ini</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="aiven_monitor.html">aiven_monitor</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">aiven-monitor</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Checker</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/configuration.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="checker">
+<h1>Checker<a class="headerlink" href="#checker" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="checker-ini">
+<h2>checker.ini<a class="headerlink" href="#checker-ini" title="Permalink to this headline">¶</a></h2>
+<p>The configuration file for <code class="docutils literal notranslate"><span class="pre">aiven-monitor-checker</span></code> is usually named “checker.ini”.</p>
+<p>By default the program search for its configuration in the current working directory
+but you can change that using the <code class="docutils literal notranslate"><span class="pre">--config</span></code> command-line option.</p>
+<p>All the following settings must be in a <strong>[checker]</strong> section of the ini file.</p>
+<p>The file paths, if relative, are relative to the path of the ini file.</p>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[checker]</span>
+<span class="c1">#  A name for the location from where the checker is run. Default value is &quot;default&quot;.</span>
+<span class="na">endpoint</span> <span class="o">=</span> <span class="s">default</span>
+<span class="c1"># Path to configuration file for the probes</span>
+<span class="na">probes_file</span> <span class="o">=</span> <span class="s">probes.ini</span>
+<span class="c1"># A comma-separated list of Kafka servers. Will connect to &quot;localhost:9092&quot; if not configured.</span>
+<span class="na">kafka.bootstrap_servers</span> <span class="o">=</span> <span class="s">&quot;ocalhost:9092</span>
+<span class="c1"># Kafka topic receiving the produced Measure objects. Default value is &quot;aiven_monitor_measure&quot;.</span>
+<span class="na">kafka.topic</span> <span class="o">=</span> <span class="s">aiven_monitor_measure</span>
+<span class="c1"># Path to the PEM certificate of the authority used to authenticate the Kafka servers. Optional.</span>
+<span class="na">kafka.ssl.cafile</span> <span class="o">=</span> <span class="s">/path/to/kafka.ca.pem</span>
+<span class="c1"># Path to the PEM certificate used to authenticate the checker. Optional.</span>
+<span class="na">kafka.ssl.certfile</span> <span class="o">=</span> <span class="s">/path/to/kafka.certificate.pem</span>
+<span class="c1"># Path to the PEM private key used to authenticate the checker. Optional.</span>
+<span class="na">kafka.ssl.keyfile</span> <span class="o">=</span> <span class="s">/path/to/kafka.private.pem</span>
+<span class="c1"># Number of seconds before retrying to connect. Default value is 1.0.</span>
+<span class="na">kafka.connect_interval_secs</span> <span class="o">=</span> <span class="s">1.0</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="probes-ini">
+<h2>probes.ini<a class="headerlink" href="#probes-ini" title="Permalink to this headline">¶</a></h2>
+<p>The probes are configured in a separate <strong>probes.ini</strong> file, with one section for each probe :</p>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[probe.aiven]</span>
+<span class="c1"># The URL to check</span>
+<span class="na">url</span> <span class="o">=</span> <span class="s">https://aiven.io</span>
+<span class="c1"># The approximate interval between each check</span>
+<span class="na">interval_secs</span> <span class="o">=</span> <span class="s">60</span>
+<span class="c1"># A regular expression pattern to search in the response</span>
+<span class="na">expected_pattern</span> <span class="o">=</span> <span class="s">Perf.?rmant</span>
+<span class="k">[probe.google]</span>
+<span class="na">url</span> <span class="o">=</span> <span class="s">https://www.google.com</span>
+<span class="na">interval_secs</span> <span class="o">=</span> <span class="s">120</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="writer">
+<h1>Writer<a class="headerlink" href="#writer" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="writer-ini">
+<h2>writer.ini<a class="headerlink" href="#writer-ini" title="Permalink to this headline">¶</a></h2>
+<p>The configuration file for <code class="docutils literal notranslate"><span class="pre">aiven-monitor-writer</span></code> is usually named “writer.ini”.</p>
+<p>By default the program search for its configuration in the current working directory
+but you can change that using the <code class="docutils literal notranslate"><span class="pre">--config</span></code> command-line option.</p>
+<p>All the following settings must be in a <strong>[writer]</strong> section of the ini file.</p>
+<p>The file paths, if relative, are relative to the path of the ini file.</p>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[writer]</span>
+<span class="c1"># A comma-separated list of Kafka servers. Will connect to &quot;localhost:9092&quot; if not configured.</span>
+<span class="na">kafka.bootstrap_servers</span> <span class="o">=</span> <span class="s">&quot;ocalhost:9092</span>
+<span class="c1"># Kafka topic receiving the produced Measure objects. Default value is &quot;aiven_monitor_measure&quot;.</span>
+<span class="na">kafka.topic</span> <span class="o">=</span> <span class="s">aiven_monitor_measure</span>
+<span class="c1"># Path to the PEM certificate of the authority used to authenticate the Kafka servers. Optional.</span>
+<span class="na">kafka.ssl.cafile</span> <span class="o">=</span> <span class="s">/path/to/kafka.ca.pem</span>
+<span class="c1"># Path to the PEM certificate used to authenticate the checker. Optional.</span>
+<span class="na">kafka.ssl.certfile</span> <span class="o">=</span> <span class="s">/path/to/kafka.certificate.pem</span>
+<span class="c1"># Path to the PEM private key used to authenticate the checker. Optional.</span>
+<span class="na">kafka.ssl.keyfile</span> <span class="o">=</span> <span class="s">/path/to/kafka.private.pem</span>
+<span class="c1"># Number of seconds before retrying to connect. Default value is 1.0.</span>
+<span class="na">kafka.connect_interval_secs</span> <span class="o">=</span> <span class="s">1.0</span>
+
+<span class="c1"># Name of the table where measures are stored. Default value is &quot;aiven_monitor_measure&quot;.</span>
+<span class="na">postgres.measure_table</span> <span class="o">=</span> <span class="s">aiven_monitor_measure</span>
+<span class="c1"># Hostname of the Postgres server. Will connect to UNIX socket if not provided.</span>
+<span class="na">postgres.host</span> <span class="o">=</span> <span class="s">localhost</span>
+<span class="c1"># Port of the Postgres server. Will connect through port 5432 if not provided and not a UNIX socket.</span>
+<span class="na">postgres.port</span> <span class="o">=</span> <span class="s">5432</span>
+<span class="c1"># Database inside the Postgres server. Will use to the same as the user name if not provided.</span>
+<span class="na">postgres.database</span> <span class="o">=</span> <span class="s">postgres</span>
+<span class="c1"># User name to connect to the Postgres server.</span>
+<span class="c1"># Will use the same as the operating system name of the user running the application.</span>
+<span class="na">postgres.user</span> <span class="o">=</span> <span class="s">postgres</span>
+<span class="c1"># Path to a text file with the password to connect to the Postgres server. Optional.</span>
+<span class="na">postgres.passwordfile</span> <span class="o">=</span> <span class="s">/path/to/postgres.password</span>
+<span class="c1"># Path to the PEM certificate of the authority used to authenticate the Postgres server. Optional.</span>
+<span class="na">postgres.ssl.rootcertfile</span> <span class="o">=</span> <span class="s">/path/to/postgres.ca.pem</span>
+<span class="c1"># Number of seconds before retrying to connect to Postgres. Default value is 1.0.</span>
+<span class="na">postgres.connect_interval_secs</span> <span class="o">=</span> <span class="s">1.0</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="aiven_monitor.html" class="btn btn-neutral float-right" title="aiven_monitor" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="index.html" class="btn btn-neutral float-left" title="aiven-monitor documentation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, kevin michel.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
