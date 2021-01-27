@@ -7,9 +7,9 @@ import json
 import logging
 import random
 import re
-from configparser import SectionProxy
+from configparser import ConfigParser, SectionProxy
 from pathlib import Path
-from typing import Iterable, Optional, Union
+from typing import Iterable, List, Optional, Union
 from uuid import uuid4
 
 import httpx
@@ -26,6 +26,7 @@ RESPONSE_MAX_BYTES = 1024 * 1024
 
 DEFAULT_CONFIG = {
     'endpoint': 'default',
+    'probes_file': 'probes.ini',
     'kafka.bootstrap_servers': 'localhost',
     'kafka.topic': 'aiven_monitor_measure',
     'kafka.connect_interval_secs': '1',
@@ -45,10 +46,13 @@ def main():
             and records connection metrics into a Kafka topic.'''
         )
         parser.add_argument(
-            '--config', type=str, default='checker.ini',
+            '--config',
+            type=str,
+            default='checker.ini',
             help='''path to the config file.
             absolute or relative to the working directory.
-            defaults to "checker.ini".''')
+            defaults to "checker.ini".''',
+        )
         arguments = parser.parse_args()
         logging.basicConfig(level=logging.INFO)
         config_path = Path(arguments.config).absolute()
@@ -81,6 +85,40 @@ def create_kafka_recorder(
     )
 
 
+def create_probes(base_path: Path, config: SectionProxy) -> List[Probe]:
+    """
+    Creates a list of probe from a configuration file found in the
+    `probes_file`` key found in the provided configuration.
+
+    This will raise :class:`aiven_monitor.ConfigFileNotFound` if the probes
+    file was not found.
+
+    :param base_path: The reference directory used to resolve relative paths
+     in the configuration.
+    :param config: The main configuration.
+    :return: The list of :class:`Probe`
+    """
+    probes = []
+    probes_path = resolve_path(base_path, config['probes_file'])
+    probes_config = ConfigParser()
+    found_files = probes_config.read(probes_path)
+    if len(found_files) == 0:
+        raise ConfigFileNotFound(
+            f'Probes file not found: {str(probes_path)!r}',
+        )
+    for section_name in probes_config.sections():
+        category, dot, name = section_name.partition('.')
+        if category == 'probe':
+            section = probes_config[section_name]
+            probe = Probe(
+                url=section['url'],
+                interval_secs=section.getfloat('interval_secs'),
+                expected_pattern=section.get('expected_pattern'),
+            )
+            probes.append(probe)
+    return probes
+
+
 async def async_main(base_path: Path, config: SectionProxy):
     """
     Starts a :class:`Scheduler` and a :class:`KafkaRecorder` together.
@@ -91,20 +129,10 @@ async def async_main(base_path: Path, config: SectionProxy):
     """
     scheduler = Scheduler()
     recorder = create_kafka_recorder(base_path, config)
+    probes = create_probes(base_path, config)
     async with trio.open_nursery() as nursery:
         try:
-            # TODO: what should be the source of the 'config' ?
-            await scheduler.add(
-                [
-                    Probe(
-                        'https://www.aiven.io',
-                        20,
-                        r'Perf.?rmant|\bFree\b|Scalable',
-                    ),
-                    Probe('https://www.google.fr', 20, 'Lucky'),
-                    Probe('https://www.github.com', 20),
-                ]
-            )
+            await scheduler.add(probes)
             nursery.start_soon(recorder.start)
             while True:
                 probe = await scheduler.get_next()

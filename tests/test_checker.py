@@ -2,6 +2,7 @@ import configparser
 import datetime
 import re
 import statistics
+import tempfile
 import uuid
 from pathlib import Path
 from unittest import mock
@@ -9,7 +10,7 @@ from unittest import mock
 import kafka.errors
 import pytest
 import trio
-from aiven_monitor import Measure, VERSION
+from aiven_monitor import ConfigFileNotFound, Measure, VERSION
 from aiven_monitor.checker import (
     KafkaRecorder,
     Probe,
@@ -17,8 +18,52 @@ from aiven_monitor.checker import (
     RESPONSE_MAX_BYTES,
     Schedule,
     Scheduler,
-    create_kafka_recorder,
+    create_kafka_recorder, create_probes,
 )
+
+
+def test_create_probes_from_config():
+    with tempfile.NamedTemporaryFile() as probes_file:
+        probes_file.write(
+            rb'''
+            [ignored]
+            url = https://example.org
+            [probe.example]
+            url = https://example.org
+            interval_secs = 12.3
+            [probe.example_2]
+            url = https://example.com
+            interval_secs = 45.6
+            expected_pattern = \bhello\b
+            '''
+        )
+        probes_file.flush()
+        config = configparser.ConfigParser()
+        config.read_dict({
+            'checker': {
+                'probes_file': probes_file.name
+            }
+        })
+        probes = create_probes(Path('.'), config['checker'])
+        assert len(probes) == 2
+        first_probe, second_probe = probes
+        assert first_probe.url == 'https://example.org'
+        assert first_probe.interval_secs == 12.3
+        assert first_probe.expected_pattern is None
+        assert second_probe.url == 'https://example.com'
+        assert second_probe.interval_secs == 45.6
+        assert second_probe.expected_pattern == re.compile(r'\bhello\b')
+
+
+def test_create_probes_from_missing_file_fails():
+    config = configparser.ConfigParser()
+    config.read_dict({
+        'checker': {
+            'probes_file': '/does/not/exists'
+        }
+    })
+    with pytest.raises(ConfigFileNotFound):
+        create_probes(Path('.'), config['checker'])
 
 
 def test_create_probe():
