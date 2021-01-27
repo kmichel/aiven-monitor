@@ -59,6 +59,3 @@ async def test_kafka_roundtrip():
             new_measure = await source.get_measure()
             assert new_measure.measure_id == measure.measure_id
         nursery.cancel_scope.cancel()
-
-
-trio.run(test_kafka_roundtrip)

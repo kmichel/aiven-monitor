@@ -31,6 +31,7 @@ jobs:
           echo "${POSTGRES_PASSWORD}" > tests/github/postgres.password
       - name: Run Tests
         env:
+          AIVEN_TEST_CHECKER_CONFIG_PATH: tests/github/checker.ini
           AIVEN_TEST_WRITER_CONFIG_PATH: tests/github/writer.ini
         run: |
           venv/bin/pytest
