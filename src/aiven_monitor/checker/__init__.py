@@ -39,26 +39,29 @@ def main():
     Configures the logging at :attr:`logging.INFO` level and starts the
     :func:`async_main` function using `trio`.
     """
-    parser = argparse.ArgumentParser(
-        description='''Connects to a list of websites at regular interval
-        and records connection metrics into a Kafka topic.'''
-    )
-    parser.add_argument(
-        '--config', type=str, default='checker.ini',
-        help='''path to the config file.
-        absolute or relative to the working directory.
-        defaults to "checker.ini".''')
-    arguments = parser.parse_args()
-    logging.basicConfig(level=logging.INFO)
-    config_path = Path(arguments.config).absolute()
-    logger.info(f'Using config file: {str(config_path)!r}')
     try:
-        config = load_checker_config(config_path)
-    except ConfigFileNotFound as e:
-        logger.error(str(e))
-        return -1
-    else:
-        trio.run(async_main, config_path.parent, config)
+        parser = argparse.ArgumentParser(
+            description='''Connects to a list of websites at regular interval
+            and records connection metrics into a Kafka topic.'''
+        )
+        parser.add_argument(
+            '--config', type=str, default='checker.ini',
+            help='''path to the config file.
+            absolute or relative to the working directory.
+            defaults to "checker.ini".''')
+        arguments = parser.parse_args()
+        logging.basicConfig(level=logging.INFO)
+        config_path = Path(arguments.config).absolute()
+        logger.info(f'Using config file: {str(config_path)!r}')
+        try:
+            config = load_checker_config(config_path)
+        except ConfigFileNotFound as e:
+            logger.error(str(e))
+            return -1
+        else:
+            trio.run(async_main, config_path.parent, config)
+    except KeyboardInterrupt:
+        return 0
 
 
 def load_checker_config(config_path: Union[str, Path]) -> SectionProxy:
