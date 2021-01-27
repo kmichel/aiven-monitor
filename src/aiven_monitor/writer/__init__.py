@@ -238,6 +238,7 @@ class PostgresRecorder:
     @staticmethod
     def _connection_factory(*args, **kwargs):
         connection = psycopg2.connect(*args, **kwargs)
+        connection.set_session(autocommit=True)
         psycopg2.extras.register_uuid(conn_or_curs=connection)
         return connection
 
@@ -270,7 +271,7 @@ class PostgresRecorder:
         If the connection is lost or cannot be established, it will endlessly
         retry while waiting `connect_interval_secs`  between each attempt.
         """
-        while self.cursor is None:
+        while self.cursor is None or self.cursor.closed:
             try:
                 logger.info(
                     'postgres-connect: host=%s, user=%s, database=%s',
@@ -303,7 +304,7 @@ class PostgresRecorder:
 
     async def wait_for_cursor(self):
         async with self.has_cursor:
-            while self.cursor is None:
+            while self.cursor is None or self.cursor.closed:
                 await self.has_cursor.wait()
 
     async def record(self, measure: Measure) -> None:

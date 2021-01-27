@@ -90,6 +90,9 @@ async def test_postgres_create_measure():
             nursery.start_soon(recorder.start)
             await recorder.wait_for_cursor()
             await recorder.record(measure)
+            recorder.cursor.close()
+            nursery.start_soon(recorder.start)
+            await recorder.wait_for_cursor()
             recorder.cursor.execute(
                 sql.SQL(
                     '''
