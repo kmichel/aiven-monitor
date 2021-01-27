@@ -11,7 +11,7 @@ The project is split in two binaries:
  - `aiven-monitor-checker` : runs the monitoring probes and sends the result to Kafka.
  - `aiven-monitor-writer` : reads from Kafka and stores the result in Postgres.
 
-The monitoring probes are [configurable from a file](https://kmichel.github.io/aiven-monitor/aiven_monitor/checker.html#configuration-options):
+The monitoring probes are [configurable from a file](https://kmichel.github.io/aiven-monitor/configuration.html#probes-ini):
 
 ```ini
 [probe.aiven]
@@ -46,13 +46,13 @@ docker service logs aiven-monitor-test_writer --timestamps 2>&1 -f
 ```
 
 # Running the Checker
-See the [Checker documentation](https://kmichel.github.io/aiven-monitor/aiven_monitor/checker.html#configuration-options) for the configuration options. 
+See the [Checker documentation](https://kmichel.github.io/aiven-monitor/configuration.html#checker-ini) for the configuration options. 
 ```shell script
 aiven-monitor-checker --config=/path/to/checker.ini
 ```
 
 # Running the Writer
-See the [Writer documentation](https://kmichel.github.io/aiven-monitor/aiven_monitor/writer.html#configuration-options) for the configuration options.
+See the [Writer documentation](https://kmichel.github.io/aiven-monitor/aiven_monitor/configuration.html#writer-ini) for the configuration options.
 ```shell script
 aiven-monitor-writer --config=/path/to/writer.ini
 ```
