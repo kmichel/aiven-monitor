@@ -1,4 +1,5 @@
 import datetime
+from configparser import ConfigParser, SectionProxy
 from pathlib import Path
 from typing import Dict, Optional, Union
 from uuid import UUID
@@ -104,6 +105,22 @@ class Measure:
             'pattern_was_found': self.pattern_was_found,
             'checker_version': self.checker_version,
         }
+
+
+def load_config(section_name: str, default_config: dict,
+                config_path: Union[str, Path]) -> SectionProxy:
+    config = ConfigParser()
+    config.read_dict({section_name: default_config})
+    found_files = config.read(config_path)
+    if len(found_files) == 0:
+        raise ConfigFileNotFound(
+            f'Configuration file not found: {str(config_path)!r}',
+        )
+    return config[section_name]
+
+
+class ConfigFileNotFound(Exception):
+    pass
 
 
 def resolve_path(head: Path, optional_tail: Optional[str]):

@@ -4,7 +4,7 @@ import argparse
 import datetime
 import json
 import logging
-from configparser import ConfigParser, SectionProxy
+from configparser import SectionProxy
 from pathlib import Path
 from typing import Optional, Union
 from uuid import UUID
@@ -16,7 +16,7 @@ import psycopg2.extras
 import trio
 from psycopg2 import sql
 
-from .. import Measure, resolve_path
+from .. import ConfigFileNotFound, Measure, load_config, resolve_path
 
 logger = logging.getLogger('aiven-monitor-writer')
 
@@ -46,16 +46,18 @@ into a Kafka topic and records them in a Postgres database.'''
     arguments = parser.parse_args()
     logging.basicConfig(level=logging.INFO)
     config_path = Path(arguments.config).absolute()
-    logger.info('Using config file: %s', config_path)
-    config = load_writer_config(config_path)
-    trio.run(async_main, config_path.parent, config)
+    logger.info(f'Using config file: {str(config_path)!r}')
+    try:
+        config = load_writer_config(config_path)
+    except ConfigFileNotFound as e:
+        logger.error(str(e))
+        return -1
+    else:
+        trio.run(async_main, config_path.parent, config)
 
 
 def load_writer_config(config_path: Union[str, Path]) -> SectionProxy:
-    config = ConfigParser()
-    config.read_dict({'writer': DEFAULT_CONFIG})
-    config.read(config_path)
-    return config['writer']
+    return load_config('writer', DEFAULT_CONFIG, config_path)
 
 
 def create_kafka_source(base_path: Path, config: SectionProxy) -> KafkaSource:
