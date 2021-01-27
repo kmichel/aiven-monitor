@@ -94,7 +94,7 @@ async def async_main(base_path: Path, config: SectionProxy):
     """
     Runs a :class:`KafkaSource` and a :class:`PostgresRecorder` together.
 
-    :param base_path: The reference path used to resolve relative paths
+    :param base_path: The reference directory used to resolve relative paths
      in the configuration.
     :param config: The configuration for the :class:`KafkaSource` and the
      :class:`PostgresRecorder`.
@@ -213,7 +213,7 @@ class KafkaSource:
 class PostgresRecorder:
     """
     Takes :class:`aiven_monitor.Measure` objects and records them in a Postgres
-     `measure_table`.
+    `measure_table`.
 
     :param measure_table: The name of the table where measures are stored.
     :param host: The hostname of the Postgres server.

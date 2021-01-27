@@ -80,7 +80,7 @@ async def async_main(base_path: Path, config: SectionProxy):
     """
     Starts a :class:`Scheduler` and a :class:`KafkaRecorder` together.
 
-    :param base_path: The reference path used to resolve relative paths
+    :param base_path: The reference directory used to resolve relative paths
      in the configuration.
     :param config: The configuration for the :class:`KafkaRecorder`.
     """
