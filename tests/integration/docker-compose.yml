@@ -104,7 +104,7 @@ services:
     image: aiven-monitor
     user: aiven:aiven
     init: true
-    entrypoint: aiven-monitor-checker
+    entrypoint: aiven-monitor-checker --config=/run/secrets/checker.ini
     secrets:
       - source: checker.ini
         uid: '999'
@@ -128,7 +128,7 @@ services:
     image: aiven-monitor
     user: aiven:aiven
     init: true
-    entrypoint: aiven-monitor-writer
+    entrypoint: aiven-monitor-writer --config=/run/secrets/writer.ini
     secrets:
       - source: writer.ini
         uid: '999'

@@ -1,10 +1,10 @@
 from __future__ import annotations
 
+import argparse
 import datetime
 import heapq
 import json
 import logging
-import os
 import random
 import re
 from configparser import ConfigParser, SectionProxy
@@ -38,17 +38,20 @@ def main():
     """
     Configures the logging at :attr:`logging.INFO` level and starts the
     :func:`async_main` function using `trio`.
-
-    The configuration path is read from the
-    **AIVEN_MONITOR_CHECKER_CONFIG_PATH** environment variable, with a default
-    value of '/run/secrets/checker.ini'.
     """
-    logging.basicConfig(level=logging.INFO)
-    config_path = Path(
-        os.environ.get(
-            'AIVEN_MONITOR_CHECKER_CONFIG_PATH', '/run/secrets/checker.ini'
-        )
+    parser = argparse.ArgumentParser(
+        description='''Connects to a list of websites at regular interval
+        and records connection metrics into a Kafka topic.'''
     )
+    parser.add_argument(
+        '--config', type=str, default='checker.ini',
+        help='''path to the config file.
+        absolute or relative to the working directory.
+        defaults to "checker.ini".''')
+    arguments = parser.parse_args()
+    logging.basicConfig(level=logging.INFO)
+    config_path = Path(arguments.config).absolute()
+    logger.info('Using config file: %s', config_path)
     config = load_checker_config(config_path)
     trio.run(async_main, config_path.parent, config)
 
