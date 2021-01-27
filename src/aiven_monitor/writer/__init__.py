@@ -40,10 +40,13 @@ def main():
     into a Kafka topic and records them in a Postgres database.'''
         )
         parser.add_argument(
-            '--config', type=str, default='writer.ini',
+            '--config',
+            type=str,
+            default='writer.ini',
             help='''path to the config file.
             absolute or relative to the current working directory.
-            defaults to "writer.ini".''')
+            defaults to "writer.ini".''',
+        )
         arguments = parser.parse_args()
         logging.basicConfig(level=logging.INFO)
         config_path = Path(arguments.config).absolute()

@@ -107,8 +107,9 @@ class Measure:
         }
 
 
-def load_config(section_name: str, default_config: dict,
-                config_path: Union[str, Path]) -> SectionProxy:
+def load_config(
+        section_name: str, default_config: dict, config_path: Union[str, Path]
+) -> SectionProxy:
     config = ConfigParser()
     config.read_dict({section_name: default_config})
     found_files = config.read(config_path)
