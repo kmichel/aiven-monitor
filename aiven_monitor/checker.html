@@ -173,21 +173,37 @@
 <h1>checker<a class="headerlink" href="#checker" title="Permalink to this headline">¶</a></h1>
 <p>This module connects to a list of websites at regular interval and records
 connection metrics into a Kafka topic.</p>
-<p>In addition to the classes documented below, this can be called from the
-command line as <cite>aiven-monitor-checker</cite> or <cite>python -m aiven_monitor.checker</cite>.</p>
+<p>This can be run as as <code class="docutils literal notranslate"><span class="pre">aiven-monitor-checker</span></code> or <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">aiven_monitor.checker</span></code> :</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>usage: aiven-monitor-checker [-h] [--config CONFIG]
+
+Connects to a list of websites at regular interval and records connection metrics into a Kafka topic.
+
+optional arguments:
+  -h, --help       show this help message and exit
+  --config CONFIG  path to the config file. absolute or relative to the working directory. defaults to &quot;checker.ini&quot;.
+</pre></div>
+</div>
 <div class="section" id="configuration-options">
 <h2>Configuration Options<a class="headerlink" href="#configuration-options" title="Permalink to this headline">¶</a></h2>
-<p>The configuration options are read from <cite>/run/secrets/reader.ini</cite> using <code class="xref py py-class docutils literal notranslate"><span class="pre">ConfigParser</span></code>.</p>
+<p>The configuration options are read from a <strong>reader.ini</strong> file using <code class="xref py py-class docutils literal notranslate"><span class="pre">ConfigParser</span></code>.</p>
 <p>All the following settings must be in a <strong>[checker]</strong> section of the ini file.</p>
-<ul class="simple">
-<li><p><strong>endpoint</strong>: A name for the location from where the checker is run. Default value is “default”.</p></li>
-<li><p><strong>kafka.bootstrap_servers</strong>: A comma-separated list of Kafka servers. Will connect to “localhost:9092” if not configured.</p></li>
-<li><p><strong>kafka.topic</strong>: The Kafka topic receiving the produced <a class="reference internal" href="../aiven_monitor.html#aiven_monitor.Measure" title="aiven_monitor.Measure"><code class="xref py py-class docutils literal notranslate"><span class="pre">aiven_monitor.Measure</span></code></a> objects. Default value is “aiven_monitor_measure”.</p></li>
-<li><p><strong>kafka.ssl.cafile</strong>: The path to the PEM certificate of the certificate authority used to authenticate the Kafka servers. Optional.</p></li>
-<li><p><strong>kafka.ssl.certfile</strong>: The path to the PEM certificate used to authenticate the checker. Optional.</p></li>
-<li><p><strong>kafka.ssl.keyfile</strong>: The path to the PEM private key used to authenticate the checker. Optional.</p></li>
-<li><p><strong>kafka.connect_interval_secs</strong>: The number of seconds before retrying to connect. Default value is <cite>1.0</cite>.</p></li>
-</ul>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[checker]</span>
+<span class="c1">#  A name for the location from where the checker is run. Default value is &quot;default&quot;.</span>
+<span class="na">endpoint</span> <span class="o">=</span> <span class="s">default</span>
+<span class="c1"># A comma-separated list of Kafka servers. Will connect to &quot;localhost:9092&quot; if not configured.</span>
+<span class="na">kafka.bootstrap_servers</span> <span class="o">=</span> <span class="s">&quot;ocalhost:9092</span>
+<span class="c1"># Kafka topic receiving the produced Measure objects. Default value is &quot;aiven_monitor_measure&quot;.</span>
+<span class="na">kafka.topic</span> <span class="o">=</span> <span class="s">aiven_monitor_measure</span>
+<span class="c1"># Path to the PEM certificate of the authority used to authenticate the Kafka servers. Optional.</span>
+<span class="na">kafka.ssl.cafile</span> <span class="o">=</span> <span class="s">/path/to/kafka.ca.pem</span>
+<span class="c1"># Path to the PEM certificate used to authenticate the checker. Optional.</span>
+<span class="na">kafka.ssl.certfile</span> <span class="o">=</span> <span class="s">/path/to/kafka.certificate.pem</span>
+<span class="c1"># Path to the PEM private key used to authenticate the checker. Optional.</span>
+<span class="na">kafka.ssl.keyfile</span> <span class="o">=</span> <span class="s">/path/to/kafka.private.pem</span>
+<span class="c1"># Number of seconds before retrying to connect. Default value is 1.0.</span>
+<span class="na">kafka.connect_interval_secs</span> <span class="o">=</span> <span class="s">1.0</span>
+</pre></div>
+</div>
 </div>
 <div class="section" id="entry-points">
 <h2>Entry Points<a class="headerlink" href="#entry-points" title="Permalink to this headline">¶</a></h2>
@@ -196,9 +212,6 @@ command line as <cite>aiven-monitor-checker</cite> or <cite>python -m aiven_moni
 <code class="sig-prename descclassname">aiven_monitor.checker.</code><code class="sig-name descname">main</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#aiven_monitor.checker.main" title="Permalink to this definition">¶</a></dt>
 <dd><p>Configures the logging at <code class="xref py py-attr docutils literal notranslate"><span class="pre">logging.INFO</span></code> level and starts the
 <a class="reference internal" href="#aiven_monitor.checker.async_main" title="aiven_monitor.checker.async_main"><code class="xref py py-func docutils literal notranslate"><span class="pre">async_main()</span></code></a> function using <cite>trio</cite>.</p>
-<p>The configuration path is read from the
-<strong>AIVEN_MONITOR_CHECKER_CONFIG_PATH</strong> environment variable, with a default
-value of ‘/run/secrets/checker.ini’.</p>
 </dd></dl>
 
 <dl class="py function">
@@ -208,7 +221,7 @@ value of ‘/run/secrets/checker.ini’.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>base_path</strong> – The reference path used to resolve relative paths
+<li><p><strong>base_path</strong> – The reference directory used to resolve relative paths
 in the configuration.</p></li>
 <li><p><strong>config</strong> – The configuration for the <a class="reference internal" href="#aiven_monitor.checker.KafkaRecorder" title="aiven_monitor.checker.KafkaRecorder"><code class="xref py py-class docutils literal notranslate"><span class="pre">KafkaRecorder</span></code></a>.</p></li>
 </ul>
