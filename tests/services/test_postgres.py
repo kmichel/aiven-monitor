@@ -14,7 +14,7 @@ These tests require a running Postgres server
 and the relevant configuration from writer.ini
 """
 
-writer_config_path = Path(__file__).parent / 'wraiter.ini'
+writer_config_path = Path(__file__).parent / 'writer.ini'
 if os.environ.get('AIVEN_TEST_WRITER_CONFIG_PATH'):
     writer_config_path = Path(os.environ.get('AIVEN_TEST_WRITER_CONFIG_PATH'))
 
