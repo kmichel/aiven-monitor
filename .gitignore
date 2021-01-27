@@ -1,5 +1,6 @@
 *.egg-info
 *.password
 *.pem
+**/__pycache__
 target/
 venv/
