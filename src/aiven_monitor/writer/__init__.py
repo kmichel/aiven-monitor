@@ -272,8 +272,8 @@ class PostgresRecorder:
                 logger.info('postgres-ready')
                 async with self.has_cursor:
                     self.has_cursor.notify_all()
-            except psycopg2.OperationalError:
-                logger.exception('postgres-error')
+            except psycopg2.OperationalError as e:
+                logger.error('postgres-error: %s', e)
                 await trio.sleep(self.connect_interval_secs)
 
     def create_cursor(self):
@@ -326,8 +326,8 @@ class PostgresRecorder:
                     measure.protocol,
                     measure.checker_version,
                 )
-            except psycopg2.DatabaseError:
-                logger.exception('postgres-error')
+            except psycopg2.DatabaseError as e:
+                logger.exception('postgres-error: %s', e)
                 await trio.sleep(self.connect_interval_secs)
                 self.cursor = None
                 await self.start()
